@@ -12,7 +12,7 @@ Modifications of the original program:
 in terms of topological properties.
 
 ---------
-Originally developped by Long Jin
+Originally developped by Long Jin 2011
 + Original C# source code available here: http://code.google.com/p/sampling-social-graphs/
 + Bibliographic reference: Long Jin, Yang Chen, Pan Hui, Cong Ding, 
 	Tianyi Wang, Athanasios Vasilakos, Beixing Deng, Xing Li, 
