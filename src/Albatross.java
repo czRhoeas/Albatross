@@ -41,27 +41,27 @@ import java.util.Scanner;
  */
 class AlbatrossSampling
 {
-	static List<List<Integer>> list;              // Original Graph: out degree
-	static List<List<Integer>> list_in;           // Original Graph: in degree
-	static List<List<Integer>> list_undirected;   // Original Graph -> Undirected Graph
-	static double[] percent_in;           // True Value
-	static double[] percent_out;
-	static double[] percent_1_in;         // CDF
-	static double[] percent_1_out;
-	static double[] percent_2_in;         // NMSE
-	static double[] percent_2_out;
-	static double[] percent_3_in;         // Each Time's Estimation
-	static double[] percent_3_out;
+	static List<List<Integer>> outLinks;              // Original Graph: out degree
+	static List<List<Integer>> inLinks;           // Original Graph: in degree
+	static List<List<Integer>> allLinks;   // Original Graph -> Undirected Graph
+	static double[] percentIn;           // True Value
+	static double[] percentOut;
+	static double[] percent1In;         // CDF
+	static double[] percent1Out;
+	static double[] percent2In;         // NMSE
+	static double[] percent2Out;
+	static double[] percent3In;         // Each Time's Estimation
+	static double[] percent3Out;
 	static boolean[] node;
-	static int max_degree_in;
-	static int max_degree_out;
-	static int node_number;
-	static int real_node_number = 0;
-	static int edge_number;
+	static int maxDegreeIn;
+	static int maxDegreeOut;
+	static int nodeNumber;
+	static int realNodeNumber = 0;
+	static int edgeNumber;
 	static int simulation = 1000;		// number of repetitions of the sampling process
-	static int sample_size;
+	static int sampleSize;
 	static double alpha = 0.02;           // Jump Probability in AS
-	static int jump_budget = 10;          // Set Jump-Cost
+	static int jumpBudget = 10;          // Set Jump-Cost
 	static String path = "data/";              // Fill in the file path
 	static String filename = "kdd03.txt";          // Fill in the file name
 
@@ -70,357 +70,357 @@ class AlbatrossSampling
 		FileInputStream fileIn = new FileInputStream(path + filename);
 		InputStreamReader reader = new InputStreamReader(fileIn);
 		Scanner sr = new Scanner(reader);
-		node_number = Integer.parseInt(sr.nextLine());
-		edge_number = Integer.parseInt(sr.nextLine());
-		list = new ArrayList<List<Integer>>(node_number);
-		list_in = new ArrayList<List<Integer>>(node_number);
-		list_undirected = new ArrayList<List<Integer>>(node_number);
-		node = new boolean[node_number + 1];
-		for (int i = 0; i < node_number; i++)
+		nodeNumber = Integer.parseInt(sr.nextLine());
+		edgeNumber = Integer.parseInt(sr.nextLine());
+		outLinks = new ArrayList<List<Integer>>(nodeNumber);
+		inLinks = new ArrayList<List<Integer>>(nodeNumber);
+		allLinks = new ArrayList<List<Integer>>(nodeNumber);
+		node = new boolean[nodeNumber + 1];
+		for (int i = 0; i < nodeNumber; i++)
 		{
-			list.add(new ArrayList<Integer>());
-			list_in.add(new ArrayList<Integer>());
-			list_undirected.add(new ArrayList<Integer>());
+			outLinks.add(new ArrayList<Integer>());
+			inLinks.add(new ArrayList<Integer>());
+			allLinks.add(new ArrayList<Integer>());
 		}
-		final String split_flag = "\t";
-		int FromNode = 0, ToNode = 0;
-		int edge_count_1 = 0;
-		int edge_count_2 = 0;
-		while (edge_count_1+edge_count_2 < edge_number)
+		final String splitFlag = "\t";
+		int fromNode = 0, toNode = 0;
+		int edgeCount1 = 0;
+		int edgeCount2 = 0;
+		while (edgeCount1+edgeCount2 < edgeNumber)
 		{
 			String str = sr.nextLine();
-			String[] split = str.split(split_flag);
-			FromNode = Integer.parseInt(split[0]);
-			ToNode = Integer.parseInt(split[1]);
-			if (FromNode == ToNode)
+			String[] split = str.split(splitFlag);
+			fromNode = Integer.parseInt(split[0]);
+			toNode = Integer.parseInt(split[1]);
+			if (fromNode == toNode)
 			{	
-				edge_count_2++;
+				edgeCount2++;
 				continue;
 			}
-			list.get(FromNode).add(ToNode);
-			list_in.get(ToNode).add(FromNode);
-			if (!list_undirected.get(FromNode).contains(ToNode))
-				list_undirected.get(FromNode).add(ToNode);
-			if (!list_undirected.get(ToNode).contains(FromNode))
-				list_undirected.get(ToNode).add(FromNode);
-			node[FromNode] = true;
-			node[ToNode] = true;
-			edge_count_1++;
+			outLinks.get(fromNode).add(toNode);
+			inLinks.get(toNode).add(fromNode);
+			if (!allLinks.get(fromNode).contains(toNode))
+				allLinks.get(fromNode).add(toNode);
+			if (!allLinks.get(toNode).contains(fromNode))
+				allLinks.get(toNode).add(fromNode);
+			node[fromNode] = true;
+			node[toNode] = true;
+			edgeCount1++;
 		}
 		sr.close();
 
-		for (int i = 0; i < node_number; i++)
+		for (int i = 0; i < nodeNumber; i++)
 		{
 			if (node[i] == true)
-				real_node_number++;
+				realNodeNumber++;
 		}
-		sample_size = real_node_number / 20;  // Set Total-Cost
+		sampleSize = realNodeNumber / 20;  // Set Total-Cost
 
-		max_degree_in = 0;
-		max_degree_out = 0;
-		for (int i = 0; i < node_number; i++)
+		maxDegreeIn = 0;
+		maxDegreeOut = 0;
+		for (int i = 0; i < nodeNumber; i++)
 		{
-			if (list_in.get(i).size() > max_degree_in)
-				max_degree_in = list_in.get(i).size();
-			if (list.get(i).size() > max_degree_out)
-				max_degree_out = list.get(i).size();
+			if (inLinks.get(i).size() > maxDegreeIn)
+				maxDegreeIn = inLinks.get(i).size();
+			if (outLinks.get(i).size() > maxDegreeOut)
+				maxDegreeOut = outLinks.get(i).size();
 		}
-		percent_in = new double[max_degree_in + 1];
-		percent_out = new double[max_degree_out + 1];
-		percent_1_in = new double[max_degree_in + 1];
-		percent_1_out = new double[max_degree_out + 1];
-		percent_2_in = new double[max_degree_in + 1];
-		percent_2_out = new double[max_degree_out + 1];
-		percent_3_in = new double[max_degree_in + 1];
-		percent_3_out = new double[max_degree_out + 1];
-		for (int i = 0; i < node_number; i++)
+		percentIn = new double[maxDegreeIn + 1];
+		percentOut = new double[maxDegreeOut + 1];
+		percent1In = new double[maxDegreeIn + 1];
+		percent1Out = new double[maxDegreeOut + 1];
+		percent2In = new double[maxDegreeIn + 1];
+		percent2Out = new double[maxDegreeOut + 1];
+		percent3In = new double[maxDegreeIn + 1];
+		percent3Out = new double[maxDegreeOut + 1];
+		for (int i = 0; i < nodeNumber; i++)
 		{
-			percent_in[list_in.get(i).size()] = percent_in[list_in.get(i).size()] + 1;
-			percent_out[list.get(i).size()] = percent_out[list.get(i).size()] + 1;
+			percentIn[inLinks.get(i).size()] = percentIn[inLinks.get(i).size()] + 1;
+			percentOut[outLinks.get(i).size()] = percentOut[outLinks.get(i).size()] + 1;
 		}
 
-		percent_in[0] = percent_in[0] - (node_number - real_node_number);
-		percent_out[0] = percent_out[0] - (node_number - real_node_number);
-		percent_in[0] = percent_in[0] / (double)real_node_number;
-		percent_out[0] = percent_out[0] / (double)real_node_number;
+		percentIn[0] = percentIn[0] - (nodeNumber - realNodeNumber);
+		percentOut[0] = percentOut[0] - (nodeNumber - realNodeNumber);
+		percentIn[0] = percentIn[0] / (double)realNodeNumber;
+		percentOut[0] = percentOut[0] / (double)realNodeNumber;
 
-		for (int i = 1; i <= max_degree_in; i++)
+		for (int i = 1; i <= maxDegreeIn; i++)
 		{
-			percent_in[i] = percent_in[i] / (double)real_node_number;
-			percent_in[i] = percent_in[i] + percent_in[i - 1];
+			percentIn[i] = percentIn[i] / (double)realNodeNumber;
+			percentIn[i] = percentIn[i] + percentIn[i - 1];
 		}
-		for (int i = 1; i <= max_degree_out; i++)
+		for (int i = 1; i <= maxDegreeOut; i++)
 		{
-			percent_out[i] = percent_out[i] / (double)real_node_number;
-			percent_out[i] = percent_out[i] + percent_out[i - 1];
+			percentOut[i] = percentOut[i] / (double)realNodeNumber;
+			percentOut[i] = percentOut[i] + percentOut[i - 1];
 		}
 
 		System.out.println("Test File: " + filename);
 		System.out.println("Test Path: " + path);
-		System.out.println("Average Degree = " + (double)edge_count_1 / (double)real_node_number);
+		System.out.println("Average Degree = " + (double)edgeCount1 / (double)realNodeNumber);
 		System.out.println("Simulation Times = " + simulation);
-		System.out.println("Node Number = " + node_number);
-		System.out.println("Real Node Number = " + real_node_number);
-		System.out.println("Sample Budget = " + sample_size);
+		System.out.println("Node Number = " + nodeNumber);
+		System.out.println("Real Node Number = " + realNodeNumber);
+		System.out.println("Sample Budget = " + sampleSize);
 		System.out.println("Jump Alpha = " + alpha);
 		System.out.println("");
 
 		FileOutputStream fileOut = new FileOutputStream(path + "Original_graph_in_degree_distribution.txt");
 		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
-		PrintWriter sw = new PrintWriter(writer);
-		for (int i = 0; i < max_degree_in; i++)
+		PrintWriter pw = new PrintWriter(writer);
+		for (int i = 0; i < maxDegreeIn; i++)
 		{
-			sw.println(Double.toString(percent_in[i]));
+			pw.println(Double.toString(percentIn[i]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "Original_graph_out_degree_distribution.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int i = 0; i < max_degree_out; i++)
+		pw = new PrintWriter(writer);
+		for (int i = 0; i < maxDegreeOut; i++)
 		{
-			sw.println(Double.toString(percent_out[i]));
+			pw.println(Double.toString(percentOut[i]));
 		}
-		sw.close();
+		pw.close();
 	}
 
 	private static void MHRW() throws FileNotFoundException
 	{
 		Random ra = new Random();
-		Queue<Integer> sampled_node = new LinkedList<Integer>();
-		Queue<Integer> query_node = new LinkedList<Integer>();
+		Queue<Integer> sampledNodes = new LinkedList<Integer>();
+		Queue<Integer> queryNodes = new LinkedList<Integer>();
 		int w = 0;
 		int v = 0;
-		int sample_node_number = sample_size;
+		int sampleNodeNumber = sampleSize;
 		int i = 0; 
-		double avg_degree = 0.0;
-		double avg_degree_in = 0.0;
+		double avgDegree = 0.0;
+		double avgDegreeIn = 0.0;
 		double temp = 0.0;
-		double temp_in = 0.0;
+		double tempIn = 0.0;
 		int count;
-		int single_sample = 0;
-		int total_sample = 0;
-		for (int m = 0; m < max_degree_in; m++)
+		int singleSample = 0;
+		int totalSample = 0;
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			percent_1_in[m] = 0.0;
-			percent_2_in[m] = 0.0;
-			percent_3_in[m] = 0.0;
+			percent1In[m] = 0.0;
+			percent2In[m] = 0.0;
+			percent3In[m] = 0.0;
 		}
-		for (int m = 0; m < max_degree_out; m++)
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			percent_1_out[m] = 0.0;
-			percent_2_out[m] = 0.0;
-			percent_3_out[m] = 0.0;
+			percent1Out[m] = 0.0;
+			percent2Out[m] = 0.0;
+			percent3Out[m] = 0.0;
 		}
 
-		int[] mixing_time_in = new int[simulation];
-		int[] mixing_time_out = new int[simulation];
+		int[] mixingTimeIn = new int[simulation];
+		int[] mixingTimeOut = new int[simulation];
 		for(int m=0;m<simulation;m++)
 		{
-			mixing_time_in[m] = sample_node_number;
-			mixing_time_out[m] = sample_node_number;
+			mixingTimeIn[m] = sampleNodeNumber;
+			mixingTimeOut[m] = sampleNodeNumber;
 		}
 		int mix = 0;
 
 		for (count = 0; count < simulation; count++)
 		{
 			i = 0;
-			single_sample = 0;
-			v = ra.nextInt(Integer.MAX_VALUE) % list_undirected.size();
-			for (int m = 0; m < max_degree_in+1; m++)
+			singleSample = 0;
+			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.size();
+			for (int m = 0; m < maxDegreeIn+1; m++)
 			{
-				percent_3_in[m] = 0.0;
+				percent3In[m] = 0.0;
 			}
-			for (int m = 0; m < max_degree_out+1; m++)
+			for (int m = 0; m < maxDegreeOut+1; m++)
 			{
-				percent_3_out[m] = 0.0;
+				percent3Out[m] = 0.0;
 			}
-			while (i < sample_node_number)
+			while (i < sampleNodeNumber)
 			{
-				if (list_undirected.get(v).size() == 0)
+				if (allLinks.get(v).size() == 0)
 				{
-					v = ra.nextInt(Integer.MAX_VALUE) % (list_undirected.size());
-					single_sample++;
-					sampled_node.offer(v);
-					if (!query_node.contains(v))
+					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.size());
+					singleSample++;
+					sampledNodes.offer(v);
+					if (!queryNodes.contains(v))
 					{
 						i++;
-						query_node.offer(v);
+						queryNodes.offer(v);
 					}
-					for (int m = list_in.get(v).size(); m <= max_degree_in; m++)
+					for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
 					{
-						percent_3_in[m] = percent_3_in[m] + 1.0;
+						percent3In[m] = percent3In[m] + 1.0;
 					}
-					for (int m = list.get(v).size(); m <= max_degree_out; m++)
+					for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
 					{
-						percent_3_out[m] = percent_3_out[m] + 1.0;
+						percent3Out[m] = percent3Out[m] + 1.0;
 					}
 					mix = 0;
-					for (mix = 0; mix < max_degree_in + 1; mix++)
+					for (mix = 0; mix < maxDegreeIn + 1; mix++)
 					{
-						if (Math.abs(percent_3_in[mix] / single_sample - percent_in[mix]) > 0.25)
+						if (Math.abs(percent3In[mix] / singleSample - percentIn[mix]) > 0.25)
 							break;
 					}
-					if (mix == max_degree_in + 1 && mixing_time_in[count] == sample_node_number)
-						mixing_time_in[count] = i;
-					else if (mix != max_degree_in + 1)
-						mixing_time_in[count] = sample_node_number;
+					if (mix == maxDegreeIn + 1 && mixingTimeIn[count] == sampleNodeNumber)
+						mixingTimeIn[count] = i;
+					else if (mix != maxDegreeIn + 1)
+						mixingTimeIn[count] = sampleNodeNumber;
 
 					mix = 0;
-					for (mix = 0; mix < max_degree_out + 1; mix++)
+					for (mix = 0; mix < maxDegreeOut + 1; mix++)
 					{
-						if (Math.abs(percent_3_out[mix] / single_sample - percent_out[mix]) > 0.25)
+						if (Math.abs(percent3Out[mix] / singleSample - percentOut[mix]) > 0.25)
 							break;
 					}
-					if (mix == max_degree_out + 1 && mixing_time_out[count] == sample_node_number)
-						mixing_time_out[count] = i;
-					else if (mix != max_degree_out + 1)
-						mixing_time_out[count] = sample_node_number;
+					if (mix == maxDegreeOut + 1 && mixingTimeOut[count] == sampleNodeNumber)
+						mixingTimeOut[count] = i;
+					else if (mix != maxDegreeOut + 1)
+						mixingTimeOut[count] = sampleNodeNumber;
 					continue;
 				}
-				w = list_undirected.get(v).get(ra.nextInt(list_undirected.get(v).size()));
+				w = allLinks.get(v).get(ra.nextInt(allLinks.get(v).size()));
 				double p = ra.nextDouble();
-				if (p <= (double)list_undirected.get(v).size() / (double)list_undirected.get(w).size())
+				if (p <= (double)allLinks.get(v).size() / (double)allLinks.get(w).size())
 				{
 					v = w;
-					single_sample++;
-					sampled_node.offer(v);
+					singleSample++;
+					sampledNodes.offer(v);
 				}
 				else
 				{
-					single_sample++;
-					sampled_node.offer(v);
+					singleSample++;
+					sampledNodes.offer(v);
 				}
 
-				if (!query_node.contains(w))
+				if (!queryNodes.contains(w))
 				{
 					i++;
-					query_node.offer(w);
+					queryNodes.offer(w);
 				}
 
-				for (int m = list_in.get(v).size(); m <= max_degree_in; m++)
+				for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
 				{
-					percent_3_in[m] = percent_3_in[m] + 1.0;
+					percent3In[m] = percent3In[m] + 1.0;
 				}
-				for (int m = list.get(v).size(); m <= max_degree_out; m++)
+				for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
 				{
-					percent_3_out[m] = percent_3_out[m] + 1.0;
+					percent3Out[m] = percent3Out[m] + 1.0;
 				}
 				mix = 0;
-				for (mix = 0; mix < max_degree_in + 1; mix++)
+				for (mix = 0; mix < maxDegreeIn + 1; mix++)
 				{
-					if (Math.abs(percent_3_in[mix] / single_sample - percent_in[mix]) > 0.25)
+					if (Math.abs(percent3In[mix] / singleSample - percentIn[mix]) > 0.25)
 						break;
 				}
-				if (mix == max_degree_in + 1 && mixing_time_in[count] == sample_node_number)
-					mixing_time_in[count] = i;
-				else if (mix != max_degree_in + 1)
-					mixing_time_in[count] = sample_node_number;
+				if (mix == maxDegreeIn + 1 && mixingTimeIn[count] == sampleNodeNumber)
+					mixingTimeIn[count] = i;
+				else if (mix != maxDegreeIn + 1)
+					mixingTimeIn[count] = sampleNodeNumber;
 
 				mix = 0;
-				for (mix = 0; mix < max_degree_out + 1; mix++)
+				for (mix = 0; mix < maxDegreeOut + 1; mix++)
 				{
-					if (Math.abs(percent_3_out[mix] / single_sample - percent_out[mix]) > 0.25)
+					if (Math.abs(percent3Out[mix] / singleSample - percentOut[mix]) > 0.25)
 						break;
 				}
-				if (mix == max_degree_out + 1 && mixing_time_out[count] == sample_node_number)
-					mixing_time_out[count] = i;
-				else if (mix != max_degree_out + 1)
-					mixing_time_out[count] = sample_node_number;
+				if (mix == maxDegreeOut + 1 && mixingTimeOut[count] == sampleNodeNumber)
+					mixingTimeOut[count] = i;
+				else if (mix != maxDegreeOut + 1)
+					mixingTimeOut[count] = sampleNodeNumber;
 			}
-			total_sample = single_sample + total_sample;
+			totalSample = singleSample + totalSample;
 
-			for (int m = 0; m < max_degree_in+1; m++)
+			for (int m = 0; m < maxDegreeIn+1; m++)
 			{
-				percent_3_in[m] = percent_3_in[m] / (double)single_sample;
-				percent_1_in[m] = percent_1_in[m] + percent_3_in[m];
-				percent_2_in[m] = percent_2_in[m] + (percent_3_in[m] - percent_in[m]) * (percent_3_in[m] - percent_in[m]);
+				percent3In[m] = percent3In[m] / (double)singleSample;
+				percent1In[m] = percent1In[m] + percent3In[m];
+				percent2In[m] = percent2In[m] + (percent3In[m] - percentIn[m]) * (percent3In[m] - percentIn[m]);
 			}
-			for (int m = 0; m < max_degree_out+1; m++)
+			for (int m = 0; m < maxDegreeOut+1; m++)
 			{
-				percent_3_out[m] = percent_3_out[m] / (double)single_sample;
-				percent_1_out[m] = percent_1_out[m] + percent_3_out[m];
-				percent_2_out[m] = percent_2_out[m] + (percent_3_out[m] - percent_out[m]) * (percent_3_out[m] - percent_out[m]);
+				percent3Out[m] = percent3Out[m] / (double)singleSample;
+				percent1Out[m] = percent1Out[m] + percent3Out[m];
+				percent2Out[m] = percent2Out[m] + (percent3Out[m] - percentOut[m]) * (percent3Out[m] - percentOut[m]);
 			}
 	
 // TODO on the first iteration, we record the sampled subnetwork
 if(count==0)
-	exportSampledNetworkAsPajek("MHRW",list,sampled_node);
+	exportSampledNetworkAsPajek("MHRW",outLinks,sampledNodes);
 			
-			sampled_node.clear();
-			query_node.clear();
+			sampledNodes.clear();
+			queryNodes.clear();
 		}
 		/* 
 		 * TODO bug: temp is never updated. 
 		 * Same thing in other functions. 
 		 * And for temp_in, too.
 		 */ 
-		avg_degree = temp / (double)(total_sample);			 
-		avg_degree_in = temp_in / (double)(total_sample);
+		avgDegree = temp / (double)(totalSample);			 
+		avgDegreeIn = tempIn / (double)(totalSample);
 
-		for (int m = 0; m < max_degree_in; m++)
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			percent_1_in[m] = percent_1_in[m] / (double)(simulation);
-			if (percent_in[m] != 0)
-				percent_2_in[m] = Math.sqrt(percent_2_in[m] / (double)(simulation)) / percent_in[m];
+			percent1In[m] = percent1In[m] / (double)(simulation);
+			if (percentIn[m] != 0)
+				percent2In[m] = Math.sqrt(percent2In[m] / (double)(simulation)) / percentIn[m];
 			else
-				percent_2_in[m] = 0;
+				percent2In[m] = 0;
 		}
-		for (int m = 0; m < max_degree_out; m++)
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			percent_1_out[m] = percent_1_out[m] / (double)(simulation);
-			if (percent_out[m] != 0)
-				percent_2_out[m] = Math.sqrt(percent_2_out[m] / (double)(simulation)) / percent_out[m];
+			percent1Out[m] = percent1Out[m] / (double)(simulation);
+			if (percentOut[m] != 0)
+				percent2Out[m] = Math.sqrt(percent2Out[m] / (double)(simulation)) / percentOut[m];
 			else
-				percent_2_out[m] = 0;
+				percent2Out[m] = 0;
 		}
 
 		FileOutputStream fileOut = new FileOutputStream(path + "MHRW_in_degree_distribution.txt");
 		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
-		PrintWriter sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_in; m++)
+		PrintWriter pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			sw.println(Double.toString(percent_1_in[m]));
+			pw.println(Double.toString(percent1In[m]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "MHRW_out_degree_distribution.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_out; m++)
+		pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			sw.println(Double.toString(percent_1_out[m]));
+			pw.println(Double.toString(percent1Out[m]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "MHRW_in_degree_NMSE.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_in; m++)
+		pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			sw.println(Double.toString(percent_2_in[m]));
+			pw.println(Double.toString(percent2In[m]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "MHRW_out_degree_NMSE.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_out; m++)
+		pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			sw.println(Double.toString(percent_2_out[m]));
+			pw.println(Double.toString(percent2Out[m]));
 		}
-		sw.close();
+		pw.close();
 
-		System.out.println("MHRW: Average In Degree = " + avg_degree_in);
-		System.out.println("MHRW: Average Out Degree = " + avg_degree);
-		System.out.println("MHRW: Average Sample Number = " + total_sample / simulation);
+		System.out.println("MHRW: Average In Degree = " + avgDegreeIn);
+		System.out.println("MHRW: Average Out Degree = " + avgDegree);
+		System.out.println("MHRW: Average Sample Number = " + totalSample / simulation);
 
 		double mix_in = 0.0;
 		double mix_out = 0.0;
 		for (int m = 0; m < simulation;m++ )
 		{
-			mix_in = mix_in + mixing_time_in[m];
-			mix_out = mix_out + mixing_time_out[m];
+			mix_in = mix_in + mixingTimeIn[m];
+			mix_out = mix_out + mixingTimeOut[m];
 		}
 		System.out.println("MHRW: Average Mixing Time (In) = " + mix_in / simulation);
 		System.out.println("MHRW: Average Mixing Time (Out) = " + mix_out / simulation);
@@ -429,500 +429,500 @@ if(count==0)
 	private static void BFS() throws FileNotFoundException
 	{
 		Random ra = new Random();
-		Queue<Integer> sampled_node = new LinkedList<Integer>();
-		Queue<Integer> waiting_node = new LinkedList<Integer>();
-		Queue<Integer> query_node = new LinkedList<Integer>();
+		Queue<Integer> sampledNodes = new LinkedList<Integer>();
+		Queue<Integer> waitingNodes = new LinkedList<Integer>();
+		Queue<Integer> queryNodes = new LinkedList<Integer>();
 		int w = 0;
 		int v = 0;
-		int sample_node_number = sample_size;
+		int sample_node_number = sampleSize;
 		int i = 0;
-		double avg_degree = 0.0;
-		double avg_degree_in = 0.0;
+		double avgDegree = 0.0;
+		double avgDegree_in = 0.0;
 		double temp = 0.0;
 		double temp_in = 0.0;
 		int count;
-		int single_sample = 0;
-		int total_sample = 0;
-		boolean[] waiting_flag = new boolean[node_number + 1];
-		boolean jump_flag = false;
+		int singleSample = 0;
+		int totalSample = 0;
+		boolean[] waitingFlag = new boolean[nodeNumber + 1];
+		boolean jumpFlag = false;
 
-		for (int m = 0; m < max_degree_in; m++)
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			percent_1_in[m] = 0.0;
-			percent_2_in[m] = 0.0;
-			percent_3_in[m] = 0.0;
+			percent1In[m] = 0.0;
+			percent2In[m] = 0.0;
+			percent3In[m] = 0.0;
 		}
-		for (int m = 0; m < max_degree_out; m++)
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			percent_1_out[m] = 0.0;
-			percent_2_out[m] = 0.0;
-			percent_3_out[m] = 0.0;
+			percent1Out[m] = 0.0;
+			percent2Out[m] = 0.0;
+			percent3Out[m] = 0.0;
 		}
 
-		int[] mixing_time_in = new int[simulation];
-		int[] mixing_time_out = new int[simulation];
+		int[] mixingTimeIn = new int[simulation];
+		int[] mixingTimeOut = new int[simulation];
 		for (int m = 0; m < simulation; m++)
 		{
-			mixing_time_in[m] = sample_node_number;
-			mixing_time_out[m] = sample_node_number;
+			mixingTimeIn[m] = sample_node_number;
+			mixingTimeOut[m] = sample_node_number;
 		}
 		int mix = 0;
 		for (count = 0; count < simulation; count++)
 		{
 			i = 0;
-			single_sample = 0;
-			for (int m = 0; m < max_degree_in + 1; m++)
+			singleSample = 0;
+			for (int m = 0; m < maxDegreeIn + 1; m++)
 			{
-				percent_3_in[m] = 0.0;
+				percent3In[m] = 0.0;
 			}
-			for (int m = 0; m < max_degree_out + 1; m++)
+			for (int m = 0; m < maxDegreeOut + 1; m++)
 			{
-				percent_3_out[m] = 0.0;
+				percent3Out[m] = 0.0;
 			}
 
-			v = ra.nextInt(Integer.MAX_VALUE) % list_undirected.size();
-			for (int m = 0; m < node_number + 1; m++)
+			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.size();
+			for (int m = 0; m < nodeNumber + 1; m++)
 			{
-				waiting_flag[m] = false;
+				waitingFlag[m] = false;
 			}
-			waiting_node.offer(v);
-			waiting_flag[v] = true;
-			jump_flag = false;
+			waitingNodes.offer(v);
+			waitingFlag[v] = true;
+			jumpFlag = false;
 			while (i < sample_node_number)
 			{
-				if (waiting_node.size() > 0)
+				if (waitingNodes.size() > 0)
 				{
-					v = waiting_node.poll();
-					single_sample++;
-					sampled_node.offer(v);
-					if (!query_node.contains(v))
+					v = waitingNodes.poll();
+					singleSample++;
+					sampledNodes.offer(v);
+					if (!queryNodes.contains(v))
 					{
-						if(jump_flag == false)
+						if(jumpFlag == false)
 						{
 							i++;
-							query_node.offer(v);
+							queryNodes.offer(v);
 						}
 						else
 						{
-							i = i + jump_budget;
-							query_node.offer(v);
-							jump_flag = false;
+							i = i + jumpBudget;
+							queryNodes.offer(v);
+							jumpFlag = false;
 						}
 					}
-					for (int en_count = 0; en_count < list_undirected.get(v).size(); en_count++)
+					for (int en_count = 0; en_count < allLinks.get(v).size(); en_count++)
 					{
-						w = list_undirected.get(v).get(en_count);
-						if(waiting_flag[w] == false)
+						w = allLinks.get(v).get(en_count);
+						if(waitingFlag[w] == false)
 						{
-							waiting_node.offer(w);
-							waiting_flag[w] = true;
+							waitingNodes.offer(w);
+							waitingFlag[w] = true;
 						}
 					}
-					for (int m = list_in.get(v).size(); m <= max_degree_in; m++)
+					for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
 					{
-						percent_3_in[m] = percent_3_in[m] + 1.0;
+						percent3In[m] = percent3In[m] + 1.0;
 					}
-					for (int m = list.get(v).size(); m <= max_degree_out; m++)
+					for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
 					{
-						percent_3_out[m] = percent_3_out[m] + 1.0;
+						percent3Out[m] = percent3Out[m] + 1.0;
 					}
 					mix = 0;
-					for (mix = 0; mix < max_degree_in + 1; mix++)
+					for (mix = 0; mix < maxDegreeIn + 1; mix++)
 					{
-						if (Math.abs(percent_3_in[mix] / single_sample - percent_in[mix]) > 0.25)
+						if (Math.abs(percent3In[mix] / singleSample - percentIn[mix]) > 0.25)
 							break;
 					}
-					if (mix == max_degree_in + 1 && mixing_time_in[count] == sample_node_number)
-						mixing_time_in[count] = i;
-					else if (mix != max_degree_in + 1)
-						mixing_time_in[count] = sample_node_number;
+					if (mix == maxDegreeIn + 1 && mixingTimeIn[count] == sample_node_number)
+						mixingTimeIn[count] = i;
+					else if (mix != maxDegreeIn + 1)
+						mixingTimeIn[count] = sample_node_number;
 
 					mix = 0;
-					for (mix = 0; mix < max_degree_out + 1; mix++)
+					for (mix = 0; mix < maxDegreeOut + 1; mix++)
 					{
-						if (Math.abs(percent_3_out[mix] / single_sample - percent_out[mix]) > 0.25)
+						if (Math.abs(percent3Out[mix] / singleSample - percentOut[mix]) > 0.25)
 							break;
 					}
-					if (mix == max_degree_out + 1 && mixing_time_out[count] == sample_node_number)
-						mixing_time_out[count] = i;
-					else if (mix != max_degree_out + 1)
-						mixing_time_out[count] = sample_node_number;
+					if (mix == maxDegreeOut + 1 && mixingTimeOut[count] == sample_node_number)
+						mixingTimeOut[count] = i;
+					else if (mix != maxDegreeOut + 1)
+						mixingTimeOut[count] = sample_node_number;
 				}
 				else
 				{
-					v = ra.nextInt(Integer.MAX_VALUE) % (list_undirected.size());
-					waiting_node.offer(v);
-					jump_flag = true;
+					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.size());
+					waitingNodes.offer(v);
+					jumpFlag = true;
 				}
 			}
-			total_sample = single_sample + total_sample;
+			totalSample = singleSample + totalSample;
 
-			for (int m = 0; m < max_degree_in+1; m++)
+			for (int m = 0; m < maxDegreeIn+1; m++)
 			{
-				percent_3_in[m] = percent_3_in[m] / (double)single_sample;
-				percent_1_in[m] = percent_1_in[m] + percent_3_in[m];
-				percent_2_in[m] = percent_2_in[m] + (percent_3_in[m] - percent_in[m]) * (percent_3_in[m] - percent_in[m]);
+				percent3In[m] = percent3In[m] / (double)singleSample;
+				percent1In[m] = percent1In[m] + percent3In[m];
+				percent2In[m] = percent2In[m] + (percent3In[m] - percentIn[m]) * (percent3In[m] - percentIn[m]);
 			}
-			for (int m = 0; m < max_degree_out+1; m++)
+			for (int m = 0; m < maxDegreeOut+1; m++)
 			{
-				percent_3_out[m] = percent_3_out[m] / (double)single_sample;
-				percent_1_out[m] = percent_1_out[m] + percent_3_out[m];
-				percent_2_out[m] = percent_2_out[m] + (percent_3_out[m] - percent_out[m]) * (percent_3_out[m] - percent_out[m]);
+				percent3Out[m] = percent3Out[m] / (double)singleSample;
+				percent1Out[m] = percent1Out[m] + percent3Out[m];
+				percent2Out[m] = percent2Out[m] + (percent3Out[m] - percentOut[m]) * (percent3Out[m] - percentOut[m]);
 			}
 
 // TODO on the first iteration, we record the sampled subnetwork
 if(count==0)
-	exportSampledNetworkAsPajek("BFS",list,sampled_node);
+	exportSampledNetworkAsPajek("BFS",outLinks,sampledNodes);
 						
-			sampled_node.clear();
-			query_node.clear();
-			waiting_node.clear();
+			sampledNodes.clear();
+			queryNodes.clear();
+			waitingNodes.clear();
 		}
-		avg_degree = temp / (double)(total_sample);
-		avg_degree_in = temp_in / (double)(total_sample);
+		avgDegree = temp / (double)(totalSample);
+		avgDegree_in = temp_in / (double)(totalSample);
 
-		for (int m = 0; m < max_degree_in; m++)
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			percent_1_in[m] = percent_1_in[m] / (double)(simulation);
-			if (percent_in[m] != 0)
-				percent_2_in[m] = Math.sqrt(percent_2_in[m] / (double)(simulation)) / percent_in[m];
+			percent1In[m] = percent1In[m] / (double)(simulation);
+			if (percentIn[m] != 0)
+				percent2In[m] = Math.sqrt(percent2In[m] / (double)(simulation)) / percentIn[m];
 			else
-				percent_2_in[m] = 0;
+				percent2In[m] = 0;
 		}
-		for (int m = 0; m < max_degree_out; m++)
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			percent_1_out[m] = percent_1_out[m] / (double)(simulation);
-			if (percent_out[m] != 0)
-				percent_2_out[m] = Math.sqrt(percent_2_out[m] / (double)(simulation)) / percent_out[m];
+			percent1Out[m] = percent1Out[m] / (double)(simulation);
+			if (percentOut[m] != 0)
+				percent2Out[m] = Math.sqrt(percent2Out[m] / (double)(simulation)) / percentOut[m];
 			else
-				percent_2_out[m] = 0;
+				percent2Out[m] = 0;
 		}
 
 		FileOutputStream fileOut = new FileOutputStream(path + "BFS_in_degree_distribution.txt");
 		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
-		PrintWriter sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_in; m++)
+		PrintWriter pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			sw.println(Double.toString(percent_1_in[m]));
+			pw.println(Double.toString(percent1In[m]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "BFS_out_degree_distribution.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_out; m++)
+		pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			sw.println(Double.toString(percent_1_out[m]));
+			pw.println(Double.toString(percent1Out[m]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "BFS_in_degree_NMSE.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_in; m++)
+		pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			sw.println(Double.toString(percent_2_in[m]));
+			pw.println(Double.toString(percent2In[m]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "BFS_out_degree_NMSE.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_out; m++)
+		pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			sw.println(Double.toString(percent_2_out[m]));
+			pw.println(Double.toString(percent2Out[m]));
 		}
-		sw.close();
+		pw.close();
 
-		System.out.println("BFS: Average In Degree = " + avg_degree_in);
-		System.out.println("BFS: Average Out Degree = " + avg_degree);
-		System.out.println("BFS: Average Sample Number = " + total_sample / simulation);
+		System.out.println("BFS: Average In Degree = " + avgDegree_in);
+		System.out.println("BFS: Average Out Degree = " + avgDegree);
+		System.out.println("BFS: Average Sample Number = " + totalSample / simulation);
 
-		double mix_in = 0.0;
-		double mix_out = 0.0;
+		double mixIn = 0.0;
+		double mixOut = 0.0;
 		for (int m = 0; m < simulation; m++)
 		{
-			mix_in = mix_in + mixing_time_in[m];
-			mix_out = mix_out + mixing_time_out[m];
+			mixIn = mixIn + mixingTimeIn[m];
+			mixOut = mixOut + mixingTimeOut[m];
 		}
-		System.out.println("BFS: Average Mixing Time (In) = " + mix_in / simulation);
-		System.out.println("BFS: Average Mixing Time (Out) = " + mix_out / simulation);
+		System.out.println("BFS: Average Mixing Time (In) = " + mixIn / simulation);
+		System.out.println("BFS: Average Mixing Time (Out) = " + mixOut / simulation);
 	}
 
 	private static void AS() throws FileNotFoundException
 	{
 		Random ra = new Random();
-		Queue<Integer> sampled_node = new LinkedList<Integer>();
-		Queue<Integer> query_node = new LinkedList<Integer>();
+		Queue<Integer> sampledNode = new LinkedList<Integer>();
+		Queue<Integer> queryNode = new LinkedList<Integer>();
 		int w = 0;
 		int v = 0;
-		int sample_node_number = sample_size;
+		int sampleNodeNumber = sampleSize;
 		int i = 0;
-		double avg_degree = 0.0;
-		double avg_degree_in = 0.0;
+		double avgDegree = 0.0;
+		double avgDegreeIn = 0.0;
 		double temp = 0.0;
-		double temp_in = 0.0;
+		double tempIn = 0.0;
 		int count;
-		int single_sample = 0;
-		int total_sample = 0;
-		for (int m = 0; m < max_degree_in; m++)
+		int singleSample = 0;
+		int totalSample = 0;
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			percent_1_in[m] = 0.0;
-			percent_2_in[m] = 0.0;
-			percent_3_in[m] = 0.0;
+			percent1In[m] = 0.0;
+			percent2In[m] = 0.0;
+			percent3In[m] = 0.0;
 		}
-		for (int m = 0; m < max_degree_out; m++)
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			percent_1_out[m] = 0.0;
-			percent_2_out[m] = 0.0;
-			percent_3_out[m] = 0.0;
+			percent1Out[m] = 0.0;
+			percent2Out[m] = 0.0;
+			percent3Out[m] = 0.0;
 		}
 
-		int[] mixing_time_in = new int[simulation];
-		int[] mixing_time_out = new int[simulation];
+		int[] mixingTime_in = new int[simulation];
+		int[] mixingTime_out = new int[simulation];
 		for (int m = 0; m < simulation; m++)
 		{
-			mixing_time_in[m] = sample_node_number;
-			mixing_time_out[m] = sample_node_number;
+			mixingTime_in[m] = sampleNodeNumber;
+			mixingTime_out[m] = sampleNodeNumber;
 		}
 		int mix = 0;
 		for (count = 0; count < simulation; count++)
 		{
 			i = 0;
-			single_sample = 0;
-			v = ra.nextInt(Integer.MAX_VALUE) % list_undirected.size();
+			singleSample = 0;
+			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.size();
 
-			for (int m = 0; m < max_degree_in + 1; m++)
+			for (int m = 0; m < maxDegreeIn + 1; m++)
 			{
-				percent_3_in[m] = 0.0;
+				percent3In[m] = 0.0;
 			}
-			for (int m = 0; m < max_degree_out + 1; m++)
+			for (int m = 0; m < maxDegreeOut + 1; m++)
 			{
-				percent_3_out[m] = 0.0;
+				percent3Out[m] = 0.0;
 			}
-			while (i < sample_node_number)
+			while (i < sampleNodeNumber)
 			{
 				double q = ra.nextDouble();
 				if (q < alpha)
 				{
-					v = ra.nextInt(Integer.MAX_VALUE) % (list_undirected.size());
-					single_sample++;
-					sampled_node.offer(v);
-					if (!query_node.contains(v))
+					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.size());
+					singleSample++;
+					sampledNode.offer(v);
+					if (!queryNode.contains(v))
 					{
-						i = i + jump_budget;
-						query_node.offer(v);
+						i = i + jumpBudget;
+						queryNode.offer(v);
 					}
 
-					for (int m = list_in.get(v).size(); m <= max_degree_in; m++)
+					for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
 					{
-						percent_3_in[m] = percent_3_in[m] + 1.0;
+						percent3In[m] = percent3In[m] + 1.0;
 					}
-					for (int m = list.get(v).size(); m <= max_degree_out; m++)
+					for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
 					{
-						percent_3_out[m] = percent_3_out[m] + 1.0;
+						percent3Out[m] = percent3Out[m] + 1.0;
 					}
 					mix = 0;
-					for (mix = 0; mix < max_degree_in + 1; mix++)
+					for (mix = 0; mix < maxDegreeIn + 1; mix++)
 					{
-						if (Math.abs(percent_3_in[mix] / single_sample - percent_in[mix]) > 0.25)
+						if (Math.abs(percent3In[mix] / singleSample - percentIn[mix]) > 0.25)
 							break;
 					}
-					if (mix == max_degree_in + 1 && mixing_time_in[count] == sample_node_number)
-						mixing_time_in[count] = i;
-					else if (mix != max_degree_in + 1)
-						mixing_time_in[count] = sample_node_number;
+					if (mix == maxDegreeIn + 1 && mixingTime_in[count] == sampleNodeNumber)
+						mixingTime_in[count] = i;
+					else if (mix != maxDegreeIn + 1)
+						mixingTime_in[count] = sampleNodeNumber;
 
 					mix = 0;
-					for (mix = 0; mix < max_degree_out + 1; mix++)
+					for (mix = 0; mix < maxDegreeOut + 1; mix++)
 					{
-						if (Math.abs(percent_3_out[mix] / single_sample - percent_out[mix]) > 0.25)
+						if (Math.abs(percent3Out[mix] / singleSample - percentOut[mix]) > 0.25)
 							break;
 					}
-					if (mix == max_degree_out + 1 && mixing_time_out[count] == sample_node_number)
-						mixing_time_out[count] = i;
-					else if (mix != max_degree_out + 1)
-						mixing_time_out[count] = sample_node_number;
+					if (mix == maxDegreeOut + 1 && mixingTime_out[count] == sampleNodeNumber)
+						mixingTime_out[count] = i;
+					else if (mix != maxDegreeOut + 1)
+						mixingTime_out[count] = sampleNodeNumber;
 					continue;
 				}
-				if (list_undirected.get(v).size() == 0)
+				if (allLinks.get(v).size() == 0)
 				{
-					v = ra.nextInt(Integer.MAX_VALUE) % (list_undirected.size());
-					single_sample++;
-					sampled_node.offer(v);
-					if (!query_node.contains(v))
+					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.size());
+					singleSample++;
+					sampledNode.offer(v);
+					if (!queryNode.contains(v))
 					{
 						i++;
-						query_node.offer(v);
+						queryNode.offer(v);
 					}
-					for (int m = list_in.get(v).size(); m <= max_degree_in; m++)
+					for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
 					{
-						percent_3_in[m] = percent_3_in[m] + 1.0;
+						percent3In[m] = percent3In[m] + 1.0;
 					}
-					for (int m = list.get(v).size(); m <= max_degree_out; m++)
+					for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
 					{
-						percent_3_out[m] = percent_3_out[m] + 1.0;
+						percent3Out[m] = percent3Out[m] + 1.0;
 					}
 					mix = 0;
-					for (mix = 0; mix < max_degree_in + 1; mix++)
+					for (mix = 0; mix < maxDegreeIn + 1; mix++)
 					{
-						if (Math.abs(percent_3_in[mix] / single_sample - percent_in[mix]) > 0.25)
+						if (Math.abs(percent3In[mix] / singleSample - percentIn[mix]) > 0.25)
 							break;
 					}
-					if (mix == max_degree_in + 1 && mixing_time_in[count] == sample_node_number)
-						mixing_time_in[count] = i;
-					else if (mix != max_degree_in + 1)
-						mixing_time_in[count] = sample_node_number;
+					if (mix == maxDegreeIn + 1 && mixingTime_in[count] == sampleNodeNumber)
+						mixingTime_in[count] = i;
+					else if (mix != maxDegreeIn + 1)
+						mixingTime_in[count] = sampleNodeNumber;
 
 					mix = 0;
-					for (mix = 0; mix < max_degree_out + 1; mix++)
+					for (mix = 0; mix < maxDegreeOut + 1; mix++)
 					{
-						if (Math.abs(percent_3_out[mix] / single_sample - percent_out[mix]) > 0.25)
+						if (Math.abs(percent3Out[mix] / singleSample - percentOut[mix]) > 0.25)
 							break;
 					}
-					if (mix == max_degree_out + 1 && mixing_time_out[count] == sample_node_number)
-						mixing_time_out[count] = i;
-					else if (mix != max_degree_out + 1)
-						mixing_time_out[count] = sample_node_number;
+					if (mix == maxDegreeOut + 1 && mixingTime_out[count] == sampleNodeNumber)
+						mixingTime_out[count] = i;
+					else if (mix != maxDegreeOut + 1)
+						mixingTime_out[count] = sampleNodeNumber;
 					continue;
 				}
-				w = list_undirected.get(v).get(ra.nextInt(list_undirected.get(v).size()));
+				w = allLinks.get(v).get(ra.nextInt(allLinks.get(v).size()));
 				double p = ra.nextDouble();
-				if (p <= (double)list_undirected.get(v).size() / (double)list_undirected.get(w).size())
+				if (p <= (double)allLinks.get(v).size() / (double)allLinks.get(w).size())
 				{
 					v = w;
-					single_sample++;
-					sampled_node.offer(v);
+					singleSample++;
+					sampledNode.offer(v);
 				}
 				else
 				{
-					single_sample++;
-					sampled_node.offer(v);
+					singleSample++;
+					sampledNode.offer(v);
 				}
-				if (!query_node.contains(w))
+				if (!queryNode.contains(w))
 				{
 					i++;
-					query_node.offer(w);
+					queryNode.offer(w);
 				}
-				for (int m = list_in.get(v).size(); m <= max_degree_in; m++)
+				for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
 				{
-					percent_3_in[m] = percent_3_in[m] + 1.0;
+					percent3In[m] = percent3In[m] + 1.0;
 				}
-				for (int m = list.get(v).size(); m <= max_degree_out; m++)
+				for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
 				{
-					percent_3_out[m] = percent_3_out[m] + 1.0;
+					percent3Out[m] = percent3Out[m] + 1.0;
 				}
 				mix = 0;
-				for (mix = 0; mix < max_degree_in + 1; mix++)
+				for (mix = 0; mix < maxDegreeIn + 1; mix++)
 				{
-					if (Math.abs(percent_3_in[mix] / single_sample - percent_in[mix]) > 0.25)
+					if (Math.abs(percent3In[mix] / singleSample - percentIn[mix]) > 0.25)
 						break;
 				}
-				if (mix == max_degree_in + 1 && mixing_time_in[count] == sample_node_number)
-					mixing_time_in[count] = i;
-				else if (mix != max_degree_in + 1)
-					mixing_time_in[count] = sample_node_number;
+				if (mix == maxDegreeIn + 1 && mixingTime_in[count] == sampleNodeNumber)
+					mixingTime_in[count] = i;
+				else if (mix != maxDegreeIn + 1)
+					mixingTime_in[count] = sampleNodeNumber;
 
 				mix = 0;
-				for (mix = 0; mix < max_degree_out + 1; mix++)
+				for (mix = 0; mix < maxDegreeOut + 1; mix++)
 				{
-					if (Math.abs(percent_3_out[mix] / single_sample - percent_out[mix]) > 0.25)
+					if (Math.abs(percent3Out[mix] / singleSample - percentOut[mix]) > 0.25)
 						break;
 				}
-				if (mix == max_degree_out + 1 && mixing_time_out[count] == sample_node_number)
-					mixing_time_out[count] = i;
-				else if (mix != max_degree_out + 1)
-					mixing_time_out[count] = sample_node_number;
+				if (mix == maxDegreeOut + 1 && mixingTime_out[count] == sampleNodeNumber)
+					mixingTime_out[count] = i;
+				else if (mix != maxDegreeOut + 1)
+					mixingTime_out[count] = sampleNodeNumber;
 			}
-			total_sample = single_sample + total_sample;
-			for (int m = 0; m < max_degree_in + 1; m++)
+			totalSample = singleSample + totalSample;
+			for (int m = 0; m < maxDegreeIn + 1; m++)
 			{
-				percent_3_in[m] = percent_3_in[m] / (double)single_sample;
-				percent_1_in[m] = percent_1_in[m] + percent_3_in[m];
-				percent_2_in[m] = percent_2_in[m] + (percent_3_in[m] - percent_in[m]) * (percent_3_in[m] - percent_in[m]);
+				percent3In[m] = percent3In[m] / (double)singleSample;
+				percent1In[m] = percent1In[m] + percent3In[m];
+				percent2In[m] = percent2In[m] + (percent3In[m] - percentIn[m]) * (percent3In[m] - percentIn[m]);
 			}
-			for (int m = 0; m < max_degree_out + 1; m++)
+			for (int m = 0; m < maxDegreeOut + 1; m++)
 			{
-				percent_3_out[m] = percent_3_out[m] / (double)single_sample;
-				percent_1_out[m] = percent_1_out[m] + percent_3_out[m];
-				percent_2_out[m] = percent_2_out[m] + (percent_3_out[m] - percent_out[m]) * (percent_3_out[m] - percent_out[m]);
+				percent3Out[m] = percent3Out[m] / (double)singleSample;
+				percent1Out[m] = percent1Out[m] + percent3Out[m];
+				percent2Out[m] = percent2Out[m] + (percent3Out[m] - percentOut[m]) * (percent3Out[m] - percentOut[m]);
 			}
 			
 // TODO on the first iteration, we record the sampled subnetwork
 if(count==0)
-	exportSampledNetworkAsPajek("AS",list,sampled_node);
+	exportSampledNetworkAsPajek("AS",outLinks,sampledNode);
 
 						
-			sampled_node.clear();
-			query_node.clear();
+			sampledNode.clear();
+			queryNode.clear();
 		}
-		avg_degree = temp / (double)(total_sample);
-		avg_degree_in = temp_in / (double)(total_sample);
-		for (int m = 0; m < max_degree_in; m++)
+		avgDegree = temp / (double)(totalSample);
+		avgDegreeIn = tempIn / (double)(totalSample);
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			percent_1_in[m] = percent_1_in[m] / (double)(simulation);
-			if (percent_in[m] != 0)
-				percent_2_in[m] = Math.sqrt(percent_2_in[m] / (double)(simulation)) / percent_in[m];
+			percent1In[m] = percent1In[m] / (double)(simulation);
+			if (percentIn[m] != 0)
+				percent2In[m] = Math.sqrt(percent2In[m] / (double)(simulation)) / percentIn[m];
 			else
-				percent_2_in[m] = 0;
+				percent2In[m] = 0;
 		}
-		for (int m = 0; m < max_degree_out; m++)
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			percent_1_out[m] = percent_1_out[m] / (double)(simulation);
-			if (percent_out[m] != 0)
-				percent_2_out[m] = Math.sqrt(percent_2_out[m] / (double)(simulation)) / percent_out[m];
+			percent1Out[m] = percent1Out[m] / (double)(simulation);
+			if (percentOut[m] != 0)
+				percent2Out[m] = Math.sqrt(percent2Out[m] / (double)(simulation)) / percentOut[m];
 			else
-				percent_2_out[m] = 0;
+				percent2Out[m] = 0;
 		}
 
 		FileOutputStream fileOut = new FileOutputStream(path + "AS_in_degree_distribution.txt");
 		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
-		PrintWriter sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_in; m++)
+		PrintWriter pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			sw.println(Double.toString(percent_1_in[m]));
+			pw.println(Double.toString(percent1In[m]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "AS_out_degree_distribution.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_out; m++)
+		pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			sw.println(Double.toString(percent_1_out[m]));
+			pw.println(Double.toString(percent1Out[m]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "AS_in_degree_NMSE.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_in; m++)
+		pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeIn; m++)
 		{
-			sw.println(Double.toString(percent_2_in[m]));
+			pw.println(Double.toString(percent2In[m]));
 		}
-		sw.close();
+		pw.close();
 
 		fileOut = new FileOutputStream(path + "AS_out_degree_NMSE.txt");
 		writer = new OutputStreamWriter(fileOut);
-		sw = new PrintWriter(writer);
-		for (int m = 0; m < max_degree_out; m++)
+		pw = new PrintWriter(writer);
+		for (int m = 0; m < maxDegreeOut; m++)
 		{
-			sw.println(Double.toString(percent_2_out[m]));
+			pw.println(Double.toString(percent2Out[m]));
 		}
-		sw.close();
+		pw.close();
 
-		System.out.println("AS: Average In Degree = " + avg_degree_in);
-		System.out.println("AS: Average Out Degree = " + avg_degree);
-		System.out.println("AS: Average Sample Number = " + total_sample / simulation);
-		double mix_in = 0.0;
-		double mix_out = 0.0;
+		System.out.println("AS: Average In Degree = " + avgDegreeIn);
+		System.out.println("AS: Average Out Degree = " + avgDegree);
+		System.out.println("AS: Average Sample Number = " + totalSample / simulation);
+		double mixIn = 0.0;
+		double mixOut = 0.0;
 		for (int m = 0; m < simulation; m++)
 		{
-			mix_in = mix_in + mixing_time_in[m];
-			mix_out = mix_out + mixing_time_out[m];
+			mixIn = mixIn + mixingTime_in[m];
+			mixOut = mixOut + mixingTime_out[m];
 		}
-		System.out.println("AS: Average Mixing Time (In) = " + mix_in / simulation);
-		System.out.println("AS: Average Mixing Time (Out) = " + mix_out / simulation);
+		System.out.println("AS: Average Mixing Time (In) = " + mixIn / simulation);
+		System.out.println("AS: Average Mixing Time (Out) = " + mixOut / simulation);
 	}
 
 	/**
