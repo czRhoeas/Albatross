@@ -41,16 +41,16 @@ import java.util.Scanner;
  */
 class AlbatrossSampling
 {
-	static List<List<Integer>> outLinks;              // Original Graph: out degree
-	static List<List<Integer>> inLinks;           // Original Graph: in degree
-	static List<List<Integer>> allLinks;   // Original Graph -> Undirected Graph
-	static double[] percentIn;           // True Value
+	static List<List<Integer>> outLinks;		// Original Graph: out degree
+	static List<List<Integer>> inLinks;			// Original Graph: in degree
+	static List<List<Integer>> allLinks;   		// Original Graph -> Undirected Graph
+	static double[] percentIn;					// True Value
 	static double[] percentOut;
-	static double[] percent1In;         // CDF
+	static double[] percent1In;					// CDF
 	static double[] percent1Out;
-	static double[] percent2In;         // NMSE
+	static double[] percent2In;					// NMSE
 	static double[] percent2Out;
-	static double[] percent3In;         // Each Time's Estimation
+	static double[] percent3In;					// Each Time's Estimation
 	static double[] percent3Out;
 	static boolean[] node;
 	static int maxDegreeIn;
@@ -58,12 +58,13 @@ class AlbatrossSampling
 	static int nodeNumber;
 	static int realNodeNumber = 0;
 	static int edgeNumber;
-	static int simulation = 1000;		// number of repetitions of the sampling process
+	static int simulation = 1;					// TODO number of repetitions of the sampling process (1000 in the original version)
 	static int sampleSize;
-	static double alpha = 0.02;           // Jump Probability in AS
-	static int jumpBudget = 10;          // Set Jump-Cost
-	static String path = "data/";              // Fill in the file path
-	static String filename = "kdd03.txt";          // Fill in the file name
+	static double alpha = 0.02;					// Jump Probability in AS
+	static int jumpBudget = 10;					// Set Jump-Cost
+	static String path = "data/";				// TODO Fill in the file path
+	static String filename = "kdd03.txt";		// TODO Fill in the file name
+	static int sizeFactor = 1000;				// TODO size of the original network divided by this value (20 in the original version)
 
 	private static void Init() throws FileNotFoundException
 	{
@@ -114,7 +115,7 @@ class AlbatrossSampling
 			if (node[i] == true)
 				realNodeNumber++;
 		}
-		sampleSize = realNodeNumber / 20;  // Set Total-Cost
+		sampleSize = realNodeNumber / sizeFactor;  // Set Total-Cost
 
 		maxDegreeIn = 0;
 		maxDegreeOut = 0;
