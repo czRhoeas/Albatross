@@ -41,9 +41,9 @@ import java.util.Scanner;
  */
 class AlbatrossSampling
 {
-	static List<List<Integer>> outLinks;		// Original Graph: out degree
-	static List<List<Integer>> inLinks;			// Original Graph: in degree
-	static List<List<Integer>> allLinks;   		// Original Graph -> Undirected Graph
+	static List<Integer>[] outLinks;			// Original Graph: out degree
+	static List<Integer>[] inLinks;				// Original Graph: in degree
+	static List<Integer>[] allLinks;			// Original Graph -> Undirected Graph
 	static double[] percentIn;					// True Value
 	static double[] percentOut;
 	static double[] percent1In;					// CDF
@@ -81,15 +81,15 @@ str = str.split(" ")[1];
 sr.nextLine();
 		nodeNumber = Integer.parseInt(str);
 //		edgeNumber = Integer.parseInt(sr.nextLine());
-		outLinks = new ArrayList<List<Integer>>(nodeNumber);
-		inLinks = new ArrayList<List<Integer>>(nodeNumber);
-		allLinks = new ArrayList<List<Integer>>(nodeNumber);
+		outLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
+		inLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
+		allLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
 		node = new boolean[nodeNumber + 1];
 		for (int i = 0; i < nodeNumber; i++)
 		{
-			outLinks.add(new ArrayList<Integer>());
-			inLinks.add(new ArrayList<Integer>());
-			allLinks.add(new ArrayList<Integer>());
+			outLinks[i] = new ArrayList<Integer>();
+			inLinks[i] = new ArrayList<Integer>();
+			allLinks[i] = new ArrayList<Integer>();
 		}
 //		final String splitFlag = "\t";
 final String splitFlag = " ";
@@ -111,12 +111,12 @@ if(edgeNumber%100000==0)
 				edgeCount2++;
 				continue;
 			}
-			outLinks.get(fromNode).add(toNode);
-			inLinks.get(toNode).add(fromNode);
-			if (!allLinks.get(fromNode).contains(toNode))
-				allLinks.get(fromNode).add(toNode);
-			if (!allLinks.get(toNode).contains(fromNode))
-				allLinks.get(toNode).add(fromNode);
+			outLinks[fromNode].add(toNode);
+			inLinks[toNode].add(fromNode);
+			if (!allLinks[fromNode].contains(toNode))
+				allLinks[fromNode].add(toNode);
+			if (!allLinks[toNode].contains(fromNode))
+				allLinks[toNode].add(fromNode);
 			node[fromNode] = true;
 			node[toNode] = true;
 			edgeCount1++;
@@ -134,10 +134,10 @@ if(edgeNumber%100000==0)
 		maxDegreeOut = 0;
 		for (int i = 0; i < nodeNumber; i++)
 		{
-			if (inLinks.get(i).size() > maxDegreeIn)
-				maxDegreeIn = inLinks.get(i).size();
-			if (outLinks.get(i).size() > maxDegreeOut)
-				maxDegreeOut = outLinks.get(i).size();
+			if (inLinks[i].size() > maxDegreeIn)
+				maxDegreeIn = inLinks[i].size();
+			if (outLinks[i].size() > maxDegreeOut)
+				maxDegreeOut = outLinks[i].size();
 		}
 		percentIn = new double[maxDegreeIn + 1];
 		percentOut = new double[maxDegreeOut + 1];
@@ -149,8 +149,8 @@ if(edgeNumber%100000==0)
 		percent3Out = new double[maxDegreeOut + 1];
 		for (int i = 0; i < nodeNumber; i++)
 		{
-			percentIn[inLinks.get(i).size()] = percentIn[inLinks.get(i).size()] + 1;
-			percentOut[outLinks.get(i).size()] = percentOut[outLinks.get(i).size()] + 1;
+			percentIn[inLinks[i].size()] = percentIn[inLinks[i].size()] + 1;
+			percentOut[outLinks[i].size()] = percentOut[outLinks[i].size()] + 1;
 		}
 
 		percentIn[0] = percentIn[0] - (nodeNumber - realNodeNumber);
@@ -241,7 +241,7 @@ if(edgeNumber%100000==0)
 		{
 			i = 0;
 			singleSample = 0;
-			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.size();
+			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.length;
 			for (int m = 0; m < maxDegreeIn+1; m++)
 			{
 				percent3In[m] = 0.0;
@@ -252,9 +252,9 @@ if(edgeNumber%100000==0)
 			}
 			while (i < sampleNodeNumber)
 			{
-				if (allLinks.get(v).size() == 0)
+				if (allLinks[v].size() == 0)
 				{
-					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.size());
+					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.length);
 					singleSample++;
 					sampledNodes.offer(v);
 					if (!queryNodes.contains(v))
@@ -262,11 +262,11 @@ if(edgeNumber%100000==0)
 						i++;
 						queryNodes.offer(v);
 					}
-					for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
+					for (int m = inLinks[v].size(); m <= maxDegreeIn; m++)
 					{
 						percent3In[m] = percent3In[m] + 1.0;
 					}
-					for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
+					for (int m = outLinks[v].size(); m <= maxDegreeOut; m++)
 					{
 						percent3Out[m] = percent3Out[m] + 1.0;
 					}
@@ -293,9 +293,9 @@ if(edgeNumber%100000==0)
 						mixingTimeOut[count] = sampleNodeNumber;
 					continue;
 				}
-				w = allLinks.get(v).get(ra.nextInt(allLinks.get(v).size()));
+				w = allLinks[v].get(ra.nextInt(allLinks[v].size()));
 				double p = ra.nextDouble();
-				if (p <= (double)allLinks.get(v).size() / (double)allLinks.get(w).size())
+				if (p <= (double)allLinks[v].size() / (double)allLinks[w].size())
 				{
 					v = w;
 					singleSample++;
@@ -313,11 +313,11 @@ if(edgeNumber%100000==0)
 					queryNodes.offer(w);
 				}
 
-				for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
+				for (int m = inLinks[v].size(); m <= maxDegreeIn; m++)
 				{
 					percent3In[m] = percent3In[m] + 1.0;
 				}
-				for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
+				for (int m = outLinks[v].size(); m <= maxDegreeOut; m++)
 				{
 					percent3Out[m] = percent3Out[m] + 1.0;
 				}
@@ -495,7 +495,7 @@ if(count==0)
 				percent3Out[m] = 0.0;
 			}
 
-			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.size();
+			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.length;
 			for (int m = 0; m < nodeNumber + 1; m++)
 			{
 				waitingFlag[m] = false;
@@ -524,20 +524,20 @@ if(count==0)
 							jumpFlag = false;
 						}
 					}
-					for (int en_count = 0; en_count < allLinks.get(v).size(); en_count++)
+					for (int en_count = 0; en_count < allLinks[v].size(); en_count++)
 					{
-						w = allLinks.get(v).get(en_count);
+						w = allLinks[v].get(en_count);
 						if(waitingFlag[w] == false)
 						{
 							waitingNodes.offer(w);
 							waitingFlag[w] = true;
 						}
 					}
-					for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
+					for (int m = inLinks[v].size(); m <= maxDegreeIn; m++)
 					{
 						percent3In[m] = percent3In[m] + 1.0;
 					}
-					for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
+					for (int m = outLinks[v].size(); m <= maxDegreeOut; m++)
 					{
 						percent3Out[m] = percent3Out[m] + 1.0;
 					}
@@ -565,7 +565,7 @@ if(count==0)
 				}
 				else
 				{
-					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.size());
+					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.length);
 					waitingNodes.offer(v);
 					jumpFlag = true;
 				}
@@ -706,7 +706,7 @@ System.out.println("Starting sampling");
 		{
 			i = 0;
 			singleSample = 0;
-			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.size();
+			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.length;
 
 			for (int m = 0; m < maxDegreeIn + 1; m++)
 			{
@@ -723,7 +723,7 @@ if(i%1000==0)
 				double q = ra.nextDouble();
 				if (q < alpha)
 				{
-					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.size());
+					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.length);
 					singleSample++;
 					sampledNode.offer(v);
 					if (!queryNode.contains(v))
@@ -732,11 +732,11 @@ if(i%1000==0)
 						queryNode.offer(v);
 					}
 
-					for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
+					for (int m = inLinks[v].size(); m <= maxDegreeIn; m++)
 					{
 						percent3In[m] = percent3In[m] + 1.0;
 					}
-					for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
+					for (int m = outLinks[v].size(); m <= maxDegreeOut; m++)
 					{
 						percent3Out[m] = percent3Out[m] + 1.0;
 					}
@@ -763,9 +763,9 @@ if(i%1000==0)
 						mixingTime_out[count] = sampleNodeNumber;
 					continue;
 				}
-				if (allLinks.get(v).size() == 0)
+				if (allLinks[v].size() == 0)
 				{
-					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.size());
+					v = ra.nextInt(Integer.MAX_VALUE) % (allLinks.length);
 					singleSample++;
 					sampledNode.offer(v);
 					if (!queryNode.contains(v))
@@ -773,11 +773,11 @@ if(i%1000==0)
 						i++;
 						queryNode.offer(v);
 					}
-					for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
+					for (int m = inLinks[v].size(); m <= maxDegreeIn; m++)
 					{
 						percent3In[m] = percent3In[m] + 1.0;
 					}
-					for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
+					for (int m = outLinks[v].size(); m <= maxDegreeOut; m++)
 					{
 						percent3Out[m] = percent3Out[m] + 1.0;
 					}
@@ -804,9 +804,9 @@ if(i%1000==0)
 						mixingTime_out[count] = sampleNodeNumber;
 					continue;
 				}
-				w = allLinks.get(v).get(ra.nextInt(allLinks.get(v).size()));
+				w = allLinks[v].get(ra.nextInt(allLinks[v].size()));
 				double p = ra.nextDouble();
-				if (p <= (double)allLinks.get(v).size() / (double)allLinks.get(w).size())
+				if (p <= (double)allLinks[v].size() / (double)allLinks[w].size())
 				{
 					v = w;
 					singleSample++;
@@ -822,11 +822,11 @@ if(i%1000==0)
 					i++;
 					queryNode.offer(w);
 				}
-				for (int m = inLinks.get(v).size(); m <= maxDegreeIn; m++)
+				for (int m = inLinks[v].size(); m <= maxDegreeIn; m++)
 				{
 					percent3In[m] = percent3In[m] + 1.0;
 				}
-				for (int m = outLinks.get(v).size(); m <= maxDegreeOut; m++)
+				for (int m = outLinks[v].size(); m <= maxDegreeOut; m++)
 				{
 					percent3Out[m] = percent3Out[m] + 1.0;
 				}
@@ -962,7 +962,7 @@ if(count==0)
 	 * @author
 	 * 		Vincent Labatut
 	 */
-	private static void exportSampledNetworkAsPajek(String algo, List<List<Integer>> outgoingLinks, Queue<Integer> sampledNodes) throws FileNotFoundException
+	private static void exportSampledNetworkAsPajek(String algo, List<Integer>[] outgoingLinks, Queue<Integer> sampledNodes) throws FileNotFoundException
 	{	// open file
 		String filename = path + File.separator + algo + "_sample.net";
 		System.out.println("Starting ecording sample ("+filename+")");
