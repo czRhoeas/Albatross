@@ -62,12 +62,12 @@ class AlbatrossSampling
 	static int sampleSize;
 	static double alpha = 0.02;					// Jump Probability in AS
 	static int jumpBudget = 10;					// Set Jump-Cost
-	static String path = "data/";				// TODO Fill in the file path
-//	static String path = "/home/vlabatut/eclipse/workspaces/Extraction/Database/googleplus/";
-	static String filename = "kdd03.txt";		// TODO Fill in the file name
-//	static String filename = "giantcomp.network";
-	static int sizeFactor = 20;				// TODO size of the original network divided by this value (20 in the original version)
-//	static int sizeFactor = 1000;
+//	static String path = "data/";				// TODO Fill in the file path
+	static String path = "/home/vlabatut/eclipse/workspaces/Extraction/Database/googleplus/";
+//	static String filename = "kdd03.txt";		// TODO Fill in the file name
+	static String filename = "giantcomp.network";
+//	static int sizeFactor = 20;				// TODO size of the original network divided by this value (20 in the original version)
+	static int sizeFactor = 1000;
 
 	private static void Init() throws FileNotFoundException
 	{
@@ -77,10 +77,10 @@ class AlbatrossSampling
 		Scanner sr = new Scanner(reader);
 		
 		String str = sr.nextLine();
-//str = str.split(" ")[1];
-//sr.nextLine();
+str = str.split(" ")[1];
+sr.nextLine();
 		nodeNumber = Integer.parseInt(str);
-		edgeNumber = Integer.parseInt(sr.nextLine());
+//		edgeNumber = Integer.parseInt(sr.nextLine());
 		outLinks = new ArrayList<List<Integer>>(nodeNumber);
 		inLinks = new ArrayList<List<Integer>>(nodeNumber);
 		allLinks = new ArrayList<List<Integer>>(nodeNumber);
@@ -91,8 +91,8 @@ class AlbatrossSampling
 			inLinks.add(new ArrayList<Integer>());
 			allLinks.add(new ArrayList<Integer>());
 		}
-		final String splitFlag = "\t";
-//final String splitFlag = " ";
+//		final String splitFlag = "\t";
+final String splitFlag = " ";
 		int fromNode = 0, toNode = 0;
 		int edgeCount1 = 0;
 		int edgeCount2 = 0;
