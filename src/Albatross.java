@@ -63,15 +63,23 @@ class AlbatrossSampling
 	static double alpha = 0.02;					// Jump Probability in AS
 	static int jumpBudget = 10;					// Set Jump-Cost
 	static String path = "data/";				// TODO Fill in the file path
+//	static String path = "/home/vlabatut/eclipse/workspaces/Extraction/Database/googleplus/";
 	static String filename = "kdd03.txt";		// TODO Fill in the file name
-	static int sizeFactor = 1000;				// TODO size of the original network divided by this value (20 in the original version)
+//	static String filename = "giantcomp.network";
+	static int sizeFactor = 20;				// TODO size of the original network divided by this value (20 in the original version)
+//	static int sizeFactor = 1000;
 
 	private static void Init() throws FileNotFoundException
 	{
+		System.out.println("Loading "+path);
 		FileInputStream fileIn = new FileInputStream(path + filename);
 		InputStreamReader reader = new InputStreamReader(fileIn);
 		Scanner sr = new Scanner(reader);
-		nodeNumber = Integer.parseInt(sr.nextLine());
+		
+		String str = sr.nextLine();
+//str = str.split(" ")[1];
+//sr.nextLine();
+		nodeNumber = Integer.parseInt(str);
 		edgeNumber = Integer.parseInt(sr.nextLine());
 		outLinks = new ArrayList<List<Integer>>(nodeNumber);
 		inLinks = new ArrayList<List<Integer>>(nodeNumber);
@@ -84,12 +92,17 @@ class AlbatrossSampling
 			allLinks.add(new ArrayList<Integer>());
 		}
 		final String splitFlag = "\t";
+//final String splitFlag = " ";
 		int fromNode = 0, toNode = 0;
 		int edgeCount1 = 0;
 		int edgeCount2 = 0;
-		while (edgeCount1+edgeCount2 < edgeNumber)
+//		while (edgeCount1+edgeCount2 < edgeNumber)
+while (sr.hasNextLine())
 		{
-			String str = sr.nextLine();
+edgeNumber++;
+if(edgeNumber%100000==0)
+	System.out.println("..edges loaded: "+edgeNumber);
+			str = sr.nextLine();
 			String[] split = str.split(splitFlag);
 			fromNode = Integer.parseInt(split[0]);
 			toNode = Integer.parseInt(split[1]);
@@ -183,6 +196,7 @@ class AlbatrossSampling
 			pw.println(Double.toString(percentOut[i]));
 		}
 		pw.close();
+		System.out.println("Loading complete ("+path+")");
 	}
 
 	private static void MHRW() throws FileNotFoundException
@@ -652,6 +666,7 @@ if(count==0)
 
 	private static void AS() throws FileNotFoundException
 	{
+System.out.println("Starting sampling");
 		Random ra = new Random();
 		Queue<Integer> sampledNode = new LinkedList<Integer>();
 		Queue<Integer> queryNode = new LinkedList<Integer>();
@@ -703,6 +718,8 @@ if(count==0)
 			}
 			while (i < sampleNodeNumber)
 			{
+if(i%1000==0)				
+	System.out.println("..Sampled nodes: "+i+"/"+sampleNodeNumber);				
 				double q = ra.nextDouble();
 				if (q < alpha)
 				{
@@ -848,6 +865,7 @@ if(count==0)
 				percent1Out[m] = percent1Out[m] + percent3Out[m];
 				percent2Out[m] = percent2Out[m] + (percent3Out[m] - percentOut[m]) * (percent3Out[m] - percentOut[m]);
 			}
+System.out.println("Sampling complete");
 			
 // TODO on the first iteration, we record the sampled subnetwork
 if(count==0)
@@ -947,6 +965,7 @@ if(count==0)
 	private static void exportSampledNetworkAsPajek(String algo, List<List<Integer>> outgoingLinks, Queue<Integer> sampledNodes) throws FileNotFoundException
 	{	// open file
 		String filename = path + File.separator + algo + "_sample.net";
+		System.out.println("Starting ecording sample ("+filename+")");
 		FileOutputStream fileOut = new FileOutputStream(filename);
 		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
 		PrintWriter sw = new PrintWriter(writer);
@@ -984,6 +1003,7 @@ if(count==0)
 		
 		// close file
 		sw.close();
+		System.out.println("Recording complete");
 	}
 	
 	public static void main(String[] args) throws FileNotFoundException
