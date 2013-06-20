@@ -318,8 +318,8 @@ if(count==0)
 		}
 		pw.close();
 
-		System.out.println("["+formatCurrentTime()+"] MHRW: Average In Degree = " + avgDegreeIn);
-		System.out.println("["+formatCurrentTime()+"] MHRW: Average Out Degree = " + avgDegree);
+//		System.out.println("["+formatCurrentTime()+"] MHRW: Average In Degree = " + avgDegreeIn);
+//		System.out.println("["+formatCurrentTime()+"] MHRW: Average Out Degree = " + avgDegree);
 		System.out.println("["+formatCurrentTime()+"] MHRW: Average Sample Number = " + totalSample / simulation);
 
 		double mix_in = 0.0;
@@ -550,8 +550,8 @@ if(count==0)
 		}
 		pw.close();
 
-		System.out.println("["+formatCurrentTime()+"] BFS: Average In Degree = " + avgDegree_in);
-		System.out.println("["+formatCurrentTime()+"] BFS: Average Out Degree = " + avgDegree);
+//		System.out.println("["+formatCurrentTime()+"] BFS: Average In Degree = " + avgDegree_in);
+//		System.out.println("["+formatCurrentTime()+"] BFS: Average Out Degree = " + avgDegree);
 		System.out.println("["+formatCurrentTime()+"] BFS: Average Sample Number = " + totalSample / simulation);
 
 		double mixIn = 0.0;
@@ -848,8 +848,8 @@ if(count==0)
 		}
 		pw.close();
 
-		System.out.println("["+formatCurrentTime()+"] AS: Average In Degree = " + avgDegreeIn);
-		System.out.println("["+formatCurrentTime()+"] AS: Average Out Degree = " + avgDegree);
+//		System.out.println("["+formatCurrentTime()+"] AS: Average In Degree = " + avgDegreeIn);
+//		System.out.println("["+formatCurrentTime()+"] AS: Average Out Degree = " + avgDegree);
 		System.out.println("["+formatCurrentTime()+"] AS: Average Sample Number = " + totalSample / simulation);
 		double mixIn = 0.0;
 		double mixOut = 0.0;
