@@ -54,33 +54,33 @@ import java.util.Scanner;
  */
 class AlbatrossSampling
 {
-	static TIntArrayList[] outLinks;			// Original Graph: out degree
-	static TIntArrayList[] inLinks;				// Original Graph: in degree
-	static TIntArrayList[] allLinks;			// Original Graph -> Undirected Graph
-	static double[] percentIn;					// True Value
-	static double[] percentOut;
-	static double[] percent1In;					// CDF
-	static double[] percent1Out;
-	static double[] percent2In;					// NMSE
-	static double[] percent2Out;
-	static double[] percent3In;					// Each Time's Estimation
-	static double[] percent3Out;
-	static boolean[] node;
-	static int maxDegreeIn;
-	static int maxDegreeOut;
-	static int nodeNumber;
-	static int realNodeNumber = 0;
-	static int edgeNumber;
-	static int simulation = 1;					// TODO number of repetitions of the sampling process (1000 in the original version)
-	static int sampleSize;
-	static double alpha = 0.02;					// Jump Probability in AS
-	static int jumpBudget = 10;					// Set Jump-Cost
-//	static String path = "data/";				// TODO Folder containing the original network, and use to store results
-	static String path = "/home/vlabatut/eclipse/workspaces/Extraction/Database/googleplus/";
-//	static String filename = "kdd03.txt";		// TODO Original network, at the Pajek (.net) format
-	static String filename = "giantcomp.network";
-//	static int sizeFactor = 20;				// TODO size of the original network divided by this value (20 in the original version)
-	static int sizeFactor = 1000;
+	private static TIntArrayList[] outLinks;			// Original Graph: out degree
+	private static TIntArrayList[] inLinks;				// Original Graph: in degree
+	private static TIntArrayList[] allLinks;			// Original Graph -> Undirected Graph
+	private static double[] percentIn;					// True Value
+	private static double[] percentOut;
+	private static double[] percent1In;					// CDF
+	private static double[] percent1Out;
+	private static double[] percent2In;					// NMSE
+	private static double[] percent2Out;
+	private static double[] percent3In;					// Each Time's Estimation
+	private static double[] percent3Out;
+	private static boolean[] node;
+	private static int maxDegreeIn;
+	private static int maxDegreeOut;
+	private static int nodeNumber;
+	private static int realNodeNumber = 0;
+	private static int edgeNumber;
+	private static int simulation = 1;					// TODO number of repetitions of the sampling process (1000 in the original version)
+	private static int sampleSize;
+	private static double alpha = 0.02;					// Jump Probability in AS
+	private static int jumpBudget = 10;					// Set Jump-Cost
+//	private static String path = "data/";				// TODO Folder containing the original network, and use to store results
+	private static String path = "/home/vlabatut/eclipse/workspaces/Extraction/Database/googleplus/";
+//	private static String filename = "kdd03.txt";		// TODO Original network, at the Pajek (.net) format
+	private static String filename = "giantcomp.network";
+//	private static int sizeFactor = 20;				// TODO size of the original network divided by this value (20 in the original version)
+	private static int sizeFactor = 1000;
 
 	/**
 	 * Sample using the Metropolis-Hasting random walk algorithm.
@@ -578,6 +578,7 @@ if(count==0)
 	{
 System.out.println("["+formatCurrentTime()+"] Starting sampling");
 long startTime = System.currentTimeMillis();
+System.out.println("["+formatCurrentTime()+"] ..Initializing data structures");
 		Random ra = new Random();
 		Queue<Integer> sampledNode = new ArrayDeque<Integer>();
 		Queue<Integer> queryNode = new ArrayDeque<Integer>();
@@ -613,8 +614,11 @@ long startTime = System.currentTimeMillis();
 			mixingTime_out[m] = sampleNodeNumber;
 		}
 		int mix = 0;
+System.out.println("["+formatCurrentTime()+"] Repeating for each simulation");
 		for (count = 0; count < simulation; count++)
 		{
+System.out.println("["+formatCurrentTime()+"] ..Iteration #"+count);
+System.out.println("["+formatCurrentTime()+"] ....Initializing variables"+count);
 			i = 0;
 			singleSample = 0;
 			v = ra.nextInt(Integer.MAX_VALUE) % allLinks.length;
@@ -627,10 +631,11 @@ long startTime = System.currentTimeMillis();
 			{
 				percent3Out[m] = 0.0;
 			}
+System.out.println("["+formatCurrentTime()+"] ....Starting sampling nodes");
 			while (i < sampleNodeNumber)
 			{
 if(i%1000==0)				
-	System.out.println("["+formatCurrentTime()+"] ..Sampled nodes: "+i+"/"+sampleNodeNumber);				
+	System.out.println("["+formatCurrentTime()+"] ......Sampled nodes: "+i+"/"+sampleNodeNumber);				
 				double q = ra.nextDouble();
 				if (q < alpha)
 				{
@@ -1083,8 +1088,8 @@ if(edgeNumber%100000==0)
 	/////////////////////////////////////////////////////////////////
 	// TIME				/////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
-	/** format a date and hour */
-	public static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss");
+	/** Formats a date and hour */
+	private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss");
 	
 	/**
 	 * Format current date and time
@@ -1095,7 +1100,7 @@ if(edgeNumber%100000==0)
 	 * 
 	 * @author Vincent Labatut
 	 */
-	public static String formatCurrentTime()
+	private static String formatCurrentTime()
 	{	Calendar cal = Calendar.getInstance();
 		Date date = cal.getTime();
 	    return TIME_FORMAT.format(date);
@@ -1114,7 +1119,7 @@ if(edgeNumber%100000==0)
 	 * 
 	 * @author Vincent Labatut
 	 */
-	public static String formatDuration(long duration)
+	private static String formatDuration(long duration)
 	{	// processing
 		duration = duration / 1000;
 		long seconds = duration % 60;
