@@ -872,7 +872,6 @@ if(count==0)
 	private static void loadPajekNetwork(String filename) throws FileNotFoundException
 	{	
 System.out.println("["+formatCurrentTime()+"] Loading "+filename);
-long startTime = System.currentTimeMillis();
 		FileInputStream fileIn = new FileInputStream(filename);
 		InputStreamReader reader = new InputStreamReader(fileIn);
 		Scanner sr = new Scanner(reader);
@@ -880,10 +879,14 @@ long startTime = System.currentTimeMillis();
 		String str = sr.nextLine();
 str = str.split(" ")[1];
 		nodeNumber = Integer.parseInt(str);
+System.out.println("["+formatCurrentTime()+"] ..Node count: "+nodeNumber);
 do
 	str = sr.nextLine();
 while(!str.startsWith("*"));
 //		edgeNumber = Integer.parseInt(sr.nextLine());
+
+System.out.println("["+formatCurrentTime()+"] Start initializing structures");
+long startTime = System.currentTimeMillis();
 		outLinks = new TIntArrayList[nodeNumber];
 		inLinks = new TIntArrayList[nodeNumber];
 		allLinks = new TIntArrayList[nodeNumber];
@@ -893,6 +896,12 @@ while(!str.startsWith("*"));
 			inLinks[i] = new TIntArrayList();
 			allLinks[i] = new TIntArrayList();
 		}
+long endTime = System.currentTimeMillis();
+long duration = endTime - startTime;
+System.out.println("["+formatCurrentTime()+"] Structure creation completed in "+formatDuration(duration));
+		
+System.out.println("["+formatCurrentTime()+"] Starting processing links");
+startTime = System.currentTimeMillis();
 //		final String splitFlag = "\t";
 final String splitFlag = " ";
 		int fromNode = 0, toNode = 0;
@@ -1000,9 +1009,9 @@ if(edgeNumber%100000==0)
 			pw.println(Double.toString(percentOut[i]));
 		}
 		pw.close();
-		long endTime = System.currentTimeMillis();
-		long duration = endTime - startTime;
-		System.out.println("["+formatCurrentTime()+"] Loading completed ("+path+") in "+formatDuration(duration));
+		endTime = System.currentTimeMillis();
+		duration = endTime - startTime;
+		System.out.println("["+formatCurrentTime()+"] Link processing completed ("+path+") in "+formatDuration(duration));
 	}
 
 	/**
