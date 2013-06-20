@@ -7,6 +7,9 @@ Basically just an ugly port of the C# source code.
 Probably further development and refactoring to come.
 
 Modifications of the original program:
+- Now loads a Pajek (.net) file instead of the original custom format.
+- Relies on the Trove library to handle list of int (supposedly faster
+than standard ArrayList).
 - Additional method allowing to export a sampled graph as a Pajek file.
 - Additional R scripts allowing to compare original and sampled networks,
 in terms of topological properties.
