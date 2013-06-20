@@ -80,7 +80,7 @@ class AlbatrossSampling
 //	private static String filename = "kdd03.txt";		// TODO Original network, at the Pajek (.net) format
 	private static String filename = "giantcomp.network";
 //	private static int sizeFactor = 20;				// TODO size of the original network divided by this value (20 in the original version)
-	private static int sizeFactor = 1000;
+	private static int sizeFactor = 100;
 
 	/**
 	 * Sample using the Metropolis-Hasting random walk algorithm.
@@ -1039,7 +1039,7 @@ if(edgeNumber%100000==0)
 	private static void saveSampledNetworkAsPajek(String algo, TIntArrayList[] outgoingLinks, Queue<Integer> sampledNodes) throws FileNotFoundException
 	{	// open file
 		String filename = path + File.separator + algo + "_sample.net";
-		System.out.println("["+formatCurrentTime()+"] Starting ecording sample ("+filename+")");
+		System.out.println("["+formatCurrentTime()+"] Starting recording sample ("+filename+")");
 		long startTime = System.currentTimeMillis();
 		FileOutputStream fileOut = new FileOutputStream(filename);
 		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
