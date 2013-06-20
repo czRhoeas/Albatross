@@ -14,6 +14,9 @@
  * AS():   Implement Albatross Sampling
  */
 
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.list.array.TIntArrayList;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -48,9 +51,9 @@ import java.util.Scanner;
  */
 class AlbatrossSampling
 {
-	static List<Integer>[] outLinks;			// Original Graph: out degree
-	static List<Integer>[] inLinks;				// Original Graph: in degree
-	static List<Integer>[] allLinks;			// Original Graph -> Undirected Graph
+	static TIntArrayList[] outLinks;			// Original Graph: out degree
+	static TIntArrayList[] inLinks;				// Original Graph: in degree
+	static TIntArrayList[] allLinks;			// Original Graph -> Undirected Graph
 	static double[] percentIn;					// True Value
 	static double[] percentOut;
 	static double[] percent1In;					// CDF
@@ -878,14 +881,14 @@ do
 	str = sr.nextLine();
 while(!str.startsWith("*"));
 //		edgeNumber = Integer.parseInt(sr.nextLine());
-		outLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
-		inLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
-		allLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
+		outLinks = new TIntArrayList[nodeNumber];
+		inLinks = new TIntArrayList[nodeNumber];
+		allLinks = new TIntArrayList[nodeNumber];
 		node = new boolean[nodeNumber + 1];
 		for (int i = 0; i < nodeNumber; i++)
-		{	outLinks[i] = new ArrayList<Integer>();
-			inLinks[i] = new ArrayList<Integer>();
-			allLinks[i] = new ArrayList<Integer>();
+		{	outLinks[i] = new TIntArrayList();
+			inLinks[i] = new TIntArrayList();
+			allLinks[i] = new TIntArrayList();
 		}
 //		final String splitFlag = "\t";
 final String splitFlag = " ";
@@ -1014,7 +1017,7 @@ if(edgeNumber%100000==0)
 	 * @author
 	 * 		Vincent Labatut
 	 */
-	private static void saveSampledNetworkAsPajek(String algo, List<Integer>[] outgoingLinks, Queue<Integer> sampledNodes) throws FileNotFoundException
+	private static void saveSampledNetworkAsPajek(String algo, TIntArrayList[] outgoingLinks, Queue<Integer> sampledNodes) throws FileNotFoundException
 	{	// open file
 		String filename = path + File.separator + algo + "_sample.net";
 		System.out.println("["+formatCurrentTime()+"] Starting ecording sample ("+filename+")");
@@ -1041,11 +1044,13 @@ if(edgeNumber%100000==0)
 		// write links
 		{	sw.println("*arcs"); //"*edges" is for undirected networks
 			int old1 = 0;
-			for(List<Integer> neigh: outgoingLinks)
+			for(TIntArrayList neigh: outgoingLinks)
 			{	Integer nouv1 = nodeMap.get(old1);
 				if(nouv1!=null)
-				{	for(int old2: neigh)
-					{	Integer nouv2 = nodeMap.get(old2);
+				{	TIntIterator it = neigh.iterator();
+					while(it.hasNext())
+					{	int old2 = it.next();
+						Integer nouv2 = nodeMap.get(old2);
 						if(nouv2!=null)
 							sw.println(nouv1+" "+nouv2);
 					}
