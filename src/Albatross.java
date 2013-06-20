@@ -827,6 +827,15 @@ if(count==0)
 	/////////////////////////////////////////////////////////////////
 	// FILES			/////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
+	/**
+	 * Loads a Pajek (.net) network,
+	 * fill the appropriate fields with
+	 * the network data.
+	 * 
+	 * @author Long Jin
+	 * @author Vincent Labatut
+	 */
+	@SuppressWarnings("unchecked")
 	private static void loadPajekNetwork(String filename) throws FileNotFoundException
 	{	
 System.out.println("["+formatCurrentTime()+"] Loading "+filename);
@@ -837,16 +846,17 @@ long startTime = System.currentTimeMillis();
 		
 		String str = sr.nextLine();
 str = str.split(" ")[1];
-sr.nextLine();
 		nodeNumber = Integer.parseInt(str);
+do
+	str = sr.nextLine();
+while(!str.startsWith("*"));
 //		edgeNumber = Integer.parseInt(sr.nextLine());
 		outLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
 		inLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
 		allLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
 		node = new boolean[nodeNumber + 1];
 		for (int i = 0; i < nodeNumber; i++)
-		{
-			outLinks[i] = new ArrayList<Integer>();
+		{	outLinks[i] = new ArrayList<Integer>();
 			inLinks[i] = new ArrayList<Integer>();
 			allLinks[i] = new ArrayList<Integer>();
 		}
