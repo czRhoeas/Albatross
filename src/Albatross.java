@@ -1,16 +1,18 @@
-// Albatross Sampling Algorithm in HotPlanet'11
-// Author: Long Jin(Tsinghua University)
-
-// Input:  1st line is the number of vertices
-//         2nd line is the number of edges
-//         From 3rd line, edge information is followed in the format (FromNode, EndNode)
-// Output: CDF, NMSE of Degree Distribution
-//         Mixing Time
-
-// Init(): Initialize the parameters in graph sampling process
-// MHRW(): Implement Metropolis-Hasting Random Walk algorithm
-// BFS():  Implement Breadth-First Sampling
-// AS():   Implement Albatross Sampling
+/*
+ * Albatross Sampling Algorithm in HotPlanet'11
+ * Author: Long Jin(Tsinghua University)
+ * 
+ * Input:  1st line is the number of vertices
+ *         2nd line is the number of edges
+ *         From 3rd line, edge information is followed in the format (FromNode, EndNode)
+ * Output: CDF, NMSE of Degree Distribution
+ *         Mixing Time
+ *         
+ * Init(): Initialize the parameters in graph sampling process
+ * MHRW(): Implement Metropolis-Hasting Random Walk algorithm
+ * BFS():  Implement Breadth-First Sampling
+ * AS():   Implement Albatross Sampling
+ */
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +21,10 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,8 +41,10 @@ import java.util.Scanner;
  * <b>Note:</b> in the input file, node numbering
  * must start from 0.
  * 
- * @author Long Jin (Original C# source code)
- * @author Vincent Labatut (Java port)
+ * @author Long Jin
+ * 		- Original C# source code
+ * @author Vincent Labatut
+ * 		- Java port and modifications
  */
 class AlbatrossSampling
 {
@@ -68,136 +75,6 @@ class AlbatrossSampling
 	static String filename = "giantcomp.network";
 //	static int sizeFactor = 20;				// TODO size of the original network divided by this value (20 in the original version)
 	static int sizeFactor = 1000;
-
-	private static void Init() throws FileNotFoundException
-	{
-		System.out.println("Loading "+path);
-		FileInputStream fileIn = new FileInputStream(path + filename);
-		InputStreamReader reader = new InputStreamReader(fileIn);
-		Scanner sr = new Scanner(reader);
-		
-		String str = sr.nextLine();
-str = str.split(" ")[1];
-sr.nextLine();
-		nodeNumber = Integer.parseInt(str);
-//		edgeNumber = Integer.parseInt(sr.nextLine());
-		outLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
-		inLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
-		allLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
-		node = new boolean[nodeNumber + 1];
-		for (int i = 0; i < nodeNumber; i++)
-		{
-			outLinks[i] = new ArrayList<Integer>();
-			inLinks[i] = new ArrayList<Integer>();
-			allLinks[i] = new ArrayList<Integer>();
-		}
-//		final String splitFlag = "\t";
-final String splitFlag = " ";
-		int fromNode = 0, toNode = 0;
-		int edgeCount1 = 0;
-		int edgeCount2 = 0;
-//		while (edgeCount1+edgeCount2 < edgeNumber)
-while (sr.hasNextLine())
-		{
-edgeNumber++;
-if(edgeNumber%100000==0)
-	System.out.println("..edges loaded: "+edgeNumber);
-			str = sr.nextLine();
-			String[] split = str.split(splitFlag);
-			fromNode = Integer.parseInt(split[0]);
-			toNode = Integer.parseInt(split[1]);
-			if (fromNode == toNode)
-			{	
-				edgeCount2++;
-				continue;
-			}
-			outLinks[fromNode].add(toNode);
-			inLinks[toNode].add(fromNode);
-			if (!allLinks[fromNode].contains(toNode))
-				allLinks[fromNode].add(toNode);
-			if (!allLinks[toNode].contains(fromNode))
-				allLinks[toNode].add(fromNode);
-			node[fromNode] = true;
-			node[toNode] = true;
-			edgeCount1++;
-		}
-		sr.close();
-
-		for (int i = 0; i < nodeNumber; i++)
-		{
-			if (node[i] == true)
-				realNodeNumber++;
-		}
-		sampleSize = realNodeNumber / sizeFactor;  // Set Total-Cost
-
-		maxDegreeIn = 0;
-		maxDegreeOut = 0;
-		for (int i = 0; i < nodeNumber; i++)
-		{
-			if (inLinks[i].size() > maxDegreeIn)
-				maxDegreeIn = inLinks[i].size();
-			if (outLinks[i].size() > maxDegreeOut)
-				maxDegreeOut = outLinks[i].size();
-		}
-		percentIn = new double[maxDegreeIn + 1];
-		percentOut = new double[maxDegreeOut + 1];
-		percent1In = new double[maxDegreeIn + 1];
-		percent1Out = new double[maxDegreeOut + 1];
-		percent2In = new double[maxDegreeIn + 1];
-		percent2Out = new double[maxDegreeOut + 1];
-		percent3In = new double[maxDegreeIn + 1];
-		percent3Out = new double[maxDegreeOut + 1];
-		for (int i = 0; i < nodeNumber; i++)
-		{
-			percentIn[inLinks[i].size()] = percentIn[inLinks[i].size()] + 1;
-			percentOut[outLinks[i].size()] = percentOut[outLinks[i].size()] + 1;
-		}
-
-		percentIn[0] = percentIn[0] - (nodeNumber - realNodeNumber);
-		percentOut[0] = percentOut[0] - (nodeNumber - realNodeNumber);
-		percentIn[0] = percentIn[0] / (double)realNodeNumber;
-		percentOut[0] = percentOut[0] / (double)realNodeNumber;
-
-		for (int i = 1; i <= maxDegreeIn; i++)
-		{
-			percentIn[i] = percentIn[i] / (double)realNodeNumber;
-			percentIn[i] = percentIn[i] + percentIn[i - 1];
-		}
-		for (int i = 1; i <= maxDegreeOut; i++)
-		{
-			percentOut[i] = percentOut[i] / (double)realNodeNumber;
-			percentOut[i] = percentOut[i] + percentOut[i - 1];
-		}
-
-		System.out.println("Test File: " + filename);
-		System.out.println("Test Path: " + path);
-		System.out.println("Average Degree = " + (double)edgeCount1 / (double)realNodeNumber);
-		System.out.println("Simulation Times = " + simulation);
-		System.out.println("Node Number = " + nodeNumber);
-		System.out.println("Real Node Number = " + realNodeNumber);
-		System.out.println("Sample Budget = " + sampleSize);
-		System.out.println("Jump Alpha = " + alpha);
-		System.out.println("");
-
-		FileOutputStream fileOut = new FileOutputStream(path + "Original_graph_in_degree_distribution.txt");
-		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
-		PrintWriter pw = new PrintWriter(writer);
-		for (int i = 0; i < maxDegreeIn; i++)
-		{
-			pw.println(Double.toString(percentIn[i]));
-		}
-		pw.close();
-
-		fileOut = new FileOutputStream(path + "Original_graph_out_degree_distribution.txt");
-		writer = new OutputStreamWriter(fileOut);
-		pw = new PrintWriter(writer);
-		for (int i = 0; i < maxDegreeOut; i++)
-		{
-			pw.println(Double.toString(percentOut[i]));
-		}
-		pw.close();
-		System.out.println("Loading complete ("+path+")");
-	}
 
 	private static void MHRW() throws FileNotFoundException
 	{
@@ -360,7 +237,7 @@ if(edgeNumber%100000==0)
 	
 // TODO on the first iteration, we record the sampled subnetwork
 if(count==0)
-	exportSampledNetworkAsPajek("MHRW",outLinks,sampledNodes);
+	saveSampledNetworkAsPajek("MHRW",outLinks,sampledNodes);
 			
 			sampledNodes.clear();
 			queryNodes.clear();
@@ -426,9 +303,9 @@ if(count==0)
 		}
 		pw.close();
 
-		System.out.println("MHRW: Average In Degree = " + avgDegreeIn);
-		System.out.println("MHRW: Average Out Degree = " + avgDegree);
-		System.out.println("MHRW: Average Sample Number = " + totalSample / simulation);
+		System.out.println("["+formatCurrentTime()+"] MHRW: Average In Degree = " + avgDegreeIn);
+		System.out.println("["+formatCurrentTime()+"] MHRW: Average Out Degree = " + avgDegree);
+		System.out.println("["+formatCurrentTime()+"] MHRW: Average Sample Number = " + totalSample / simulation);
 
 		double mix_in = 0.0;
 		double mix_out = 0.0;
@@ -437,8 +314,8 @@ if(count==0)
 			mix_in = mix_in + mixingTimeIn[m];
 			mix_out = mix_out + mixingTimeOut[m];
 		}
-		System.out.println("MHRW: Average Mixing Time (In) = " + mix_in / simulation);
-		System.out.println("MHRW: Average Mixing Time (Out) = " + mix_out / simulation);
+		System.out.println("["+formatCurrentTime()+"] MHRW: Average Mixing Time (In) = " + mix_in / simulation);
+		System.out.println("["+formatCurrentTime()+"] MHRW: Average Mixing Time (Out) = " + mix_out / simulation);
 	}
 
 	private static void BFS() throws FileNotFoundException
@@ -587,7 +464,7 @@ if(count==0)
 
 // TODO on the first iteration, we record the sampled subnetwork
 if(count==0)
-	exportSampledNetworkAsPajek("BFS",outLinks,sampledNodes);
+	saveSampledNetworkAsPajek("BFS",outLinks,sampledNodes);
 						
 			sampledNodes.clear();
 			queryNodes.clear();
@@ -649,9 +526,9 @@ if(count==0)
 		}
 		pw.close();
 
-		System.out.println("BFS: Average In Degree = " + avgDegree_in);
-		System.out.println("BFS: Average Out Degree = " + avgDegree);
-		System.out.println("BFS: Average Sample Number = " + totalSample / simulation);
+		System.out.println("["+formatCurrentTime()+"] BFS: Average In Degree = " + avgDegree_in);
+		System.out.println("["+formatCurrentTime()+"] BFS: Average Out Degree = " + avgDegree);
+		System.out.println("["+formatCurrentTime()+"] BFS: Average Sample Number = " + totalSample / simulation);
 
 		double mixIn = 0.0;
 		double mixOut = 0.0;
@@ -660,13 +537,14 @@ if(count==0)
 			mixIn = mixIn + mixingTimeIn[m];
 			mixOut = mixOut + mixingTimeOut[m];
 		}
-		System.out.println("BFS: Average Mixing Time (In) = " + mixIn / simulation);
-		System.out.println("BFS: Average Mixing Time (Out) = " + mixOut / simulation);
+		System.out.println("["+formatCurrentTime()+"] BFS: Average Mixing Time (In) = " + mixIn / simulation);
+		System.out.println("["+formatCurrentTime()+"] BFS: Average Mixing Time (Out) = " + mixOut / simulation);
 	}
 
 	private static void AS() throws FileNotFoundException
 	{
-System.out.println("Starting sampling");
+System.out.println("["+formatCurrentTime()+"] Starting sampling");
+long startTime = System.currentTimeMillis();
 		Random ra = new Random();
 		Queue<Integer> sampledNode = new LinkedList<Integer>();
 		Queue<Integer> queryNode = new LinkedList<Integer>();
@@ -719,7 +597,7 @@ System.out.println("Starting sampling");
 			while (i < sampleNodeNumber)
 			{
 if(i%1000==0)				
-	System.out.println("..Sampled nodes: "+i+"/"+sampleNodeNumber);				
+	System.out.println("["+formatCurrentTime()+"] ..Sampled nodes: "+i+"/"+sampleNodeNumber);				
 				double q = ra.nextDouble();
 				if (q < alpha)
 				{
@@ -865,11 +743,13 @@ if(i%1000==0)
 				percent1Out[m] = percent1Out[m] + percent3Out[m];
 				percent2Out[m] = percent2Out[m] + (percent3Out[m] - percentOut[m]) * (percent3Out[m] - percentOut[m]);
 			}
-System.out.println("Sampling complete");
+long endTime = System.currentTimeMillis();
+long duration = endTime - startTime;
+System.out.println("["+formatCurrentTime()+"] Sampling completed in "+formatDuration(duration));
 			
 // TODO on the first iteration, we record the sampled subnetwork
 if(count==0)
-	exportSampledNetworkAsPajek("AS",outLinks,sampledNode);
+	saveSampledNetworkAsPajek("AS",outLinks,sampledNode);
 
 						
 			sampledNode.clear();
@@ -930,9 +810,9 @@ if(count==0)
 		}
 		pw.close();
 
-		System.out.println("AS: Average In Degree = " + avgDegreeIn);
-		System.out.println("AS: Average Out Degree = " + avgDegree);
-		System.out.println("AS: Average Sample Number = " + totalSample / simulation);
+		System.out.println("["+formatCurrentTime()+"] AS: Average In Degree = " + avgDegreeIn);
+		System.out.println("["+formatCurrentTime()+"] AS: Average Out Degree = " + avgDegree);
+		System.out.println("["+formatCurrentTime()+"] AS: Average Sample Number = " + totalSample / simulation);
 		double mixIn = 0.0;
 		double mixOut = 0.0;
 		for (int m = 0; m < simulation; m++)
@@ -940,8 +820,144 @@ if(count==0)
 			mixIn = mixIn + mixingTime_in[m];
 			mixOut = mixOut + mixingTime_out[m];
 		}
-		System.out.println("AS: Average Mixing Time (In) = " + mixIn / simulation);
-		System.out.println("AS: Average Mixing Time (Out) = " + mixOut / simulation);
+		System.out.println("["+formatCurrentTime()+"] AS: Average Mixing Time (In) = " + mixIn / simulation);
+		System.out.println("["+formatCurrentTime()+"] AS: Average Mixing Time (Out) = " + mixOut / simulation);
+	}
+
+	/////////////////////////////////////////////////////////////////
+	// FILES			/////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////
+	private static void loadPajekNetwork(String filename) throws FileNotFoundException
+	{	
+System.out.println("["+formatCurrentTime()+"] Loading "+filename);
+long startTime = System.currentTimeMillis();
+		FileInputStream fileIn = new FileInputStream(filename);
+		InputStreamReader reader = new InputStreamReader(fileIn);
+		Scanner sr = new Scanner(reader);
+		
+		String str = sr.nextLine();
+str = str.split(" ")[1];
+sr.nextLine();
+		nodeNumber = Integer.parseInt(str);
+//		edgeNumber = Integer.parseInt(sr.nextLine());
+		outLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
+		inLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
+		allLinks = (ArrayList<Integer>[]) new ArrayList[nodeNumber];
+		node = new boolean[nodeNumber + 1];
+		for (int i = 0; i < nodeNumber; i++)
+		{
+			outLinks[i] = new ArrayList<Integer>();
+			inLinks[i] = new ArrayList<Integer>();
+			allLinks[i] = new ArrayList<Integer>();
+		}
+//		final String splitFlag = "\t";
+final String splitFlag = " ";
+		int fromNode = 0, toNode = 0;
+		int edgeCount1 = 0;
+		int edgeCount2 = 0;
+//		while (edgeCount1+edgeCount2 < edgeNumber)
+while (sr.hasNextLine())
+		{
+edgeNumber++;
+if(edgeNumber%100000==0)
+	System.out.println("["+formatCurrentTime()+"] ..edges loaded: "+edgeNumber);
+			str = sr.nextLine();
+			String[] split = str.split(splitFlag);
+			fromNode = Integer.parseInt(split[0]);
+			toNode = Integer.parseInt(split[1]);
+			if (fromNode == toNode)
+			{	
+				edgeCount2++;
+				continue;
+			}
+			outLinks[fromNode].add(toNode);
+			inLinks[toNode].add(fromNode);
+			if (!allLinks[fromNode].contains(toNode))
+				allLinks[fromNode].add(toNode);
+			if (!allLinks[toNode].contains(fromNode))
+				allLinks[toNode].add(fromNode);
+			node[fromNode] = true;
+			node[toNode] = true;
+			edgeCount1++;
+		}
+		sr.close();
+
+		for (int i = 0; i < nodeNumber; i++)
+		{
+			if (node[i] == true)
+				realNodeNumber++;
+		}
+		sampleSize = realNodeNumber / sizeFactor;  // Set Total-Cost
+
+		maxDegreeIn = 0;
+		maxDegreeOut = 0;
+		for (int i = 0; i < nodeNumber; i++)
+		{
+			if (inLinks[i].size() > maxDegreeIn)
+				maxDegreeIn = inLinks[i].size();
+			if (outLinks[i].size() > maxDegreeOut)
+				maxDegreeOut = outLinks[i].size();
+		}
+		percentIn = new double[maxDegreeIn + 1];
+		percentOut = new double[maxDegreeOut + 1];
+		percent1In = new double[maxDegreeIn + 1];
+		percent1Out = new double[maxDegreeOut + 1];
+		percent2In = new double[maxDegreeIn + 1];
+		percent2Out = new double[maxDegreeOut + 1];
+		percent3In = new double[maxDegreeIn + 1];
+		percent3Out = new double[maxDegreeOut + 1];
+		for (int i = 0; i < nodeNumber; i++)
+		{
+			percentIn[inLinks[i].size()] = percentIn[inLinks[i].size()] + 1;
+			percentOut[outLinks[i].size()] = percentOut[outLinks[i].size()] + 1;
+		}
+
+		percentIn[0] = percentIn[0] - (nodeNumber - realNodeNumber);
+		percentOut[0] = percentOut[0] - (nodeNumber - realNodeNumber);
+		percentIn[0] = percentIn[0] / (double)realNodeNumber;
+		percentOut[0] = percentOut[0] / (double)realNodeNumber;
+
+		for (int i = 1; i <= maxDegreeIn; i++)
+		{
+			percentIn[i] = percentIn[i] / (double)realNodeNumber;
+			percentIn[i] = percentIn[i] + percentIn[i - 1];
+		}
+		for (int i = 1; i <= maxDegreeOut; i++)
+		{
+			percentOut[i] = percentOut[i] / (double)realNodeNumber;
+			percentOut[i] = percentOut[i] + percentOut[i - 1];
+		}
+
+		System.out.println("["+formatCurrentTime()+"] Test File: " + filename);
+		System.out.println("["+formatCurrentTime()+"] Test Path: " + path);
+		System.out.println("["+formatCurrentTime()+"] Average Degree = " + (double)edgeCount1 / (double)realNodeNumber);
+		System.out.println("["+formatCurrentTime()+"] Simulation Times = " + simulation);
+		System.out.println("["+formatCurrentTime()+"] Node Number = " + nodeNumber);
+		System.out.println("["+formatCurrentTime()+"] Real Node Number = " + realNodeNumber);
+		System.out.println("["+formatCurrentTime()+"] Sample Budget = " + sampleSize);
+		System.out.println("["+formatCurrentTime()+"] Jump Alpha = " + alpha);
+		System.out.println("");
+
+		FileOutputStream fileOut = new FileOutputStream(path + "Original_graph_in_degree_distribution.txt");
+		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
+		PrintWriter pw = new PrintWriter(writer);
+		for (int i = 0; i < maxDegreeIn; i++)
+		{
+			pw.println(Double.toString(percentIn[i]));
+		}
+		pw.close();
+
+		fileOut = new FileOutputStream(path + "Original_graph_out_degree_distribution.txt");
+		writer = new OutputStreamWriter(fileOut);
+		pw = new PrintWriter(writer);
+		for (int i = 0; i < maxDegreeOut; i++)
+		{
+			pw.println(Double.toString(percentOut[i]));
+		}
+		pw.close();
+		long endTime = System.currentTimeMillis();
+		long duration = endTime - startTime;
+		System.out.println("["+formatCurrentTime()+"] Loading completed ("+path+") in "+formatDuration(duration));
 	}
 
 	/**
@@ -962,10 +978,11 @@ if(count==0)
 	 * @author
 	 * 		Vincent Labatut
 	 */
-	private static void exportSampledNetworkAsPajek(String algo, List<Integer>[] outgoingLinks, Queue<Integer> sampledNodes) throws FileNotFoundException
+	private static void saveSampledNetworkAsPajek(String algo, List<Integer>[] outgoingLinks, Queue<Integer> sampledNodes) throws FileNotFoundException
 	{	// open file
 		String filename = path + File.separator + algo + "_sample.net";
-		System.out.println("Starting ecording sample ("+filename+")");
+		System.out.println("["+formatCurrentTime()+"] Starting ecording sample ("+filename+")");
+		long startTime = System.currentTimeMillis();
 		FileOutputStream fileOut = new FileOutputStream(filename);
 		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
 		PrintWriter sw = new PrintWriter(writer);
@@ -1003,13 +1020,69 @@ if(count==0)
 		
 		// close file
 		sw.close();
-		System.out.println("Recording complete");
+		long endTime = System.currentTimeMillis();
+		long duration = endTime - startTime;
+		System.out.println("["+formatCurrentTime()+"] Recording completed in "+formatDuration(duration));
 	}
 	
-	public static void main(String[] args) throws FileNotFoundException
-	{
-		Init();
+	/////////////////////////////////////////////////////////////////
+	// TIME				/////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////
+	/** format a date and hour */
+	public static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss");
+	
+	/**
+	 * Format current date and time
+	 * (for logging purposes).
+	 * 
+	 * @return
+	 * 		A string representation of the current date and time.
+	 * 
+	 * @author Vincent Labatut
+	 */
+	public static String formatCurrentTime()
+	{	Calendar cal = Calendar.getInstance();
+		Date date = cal.getTime();
+	    return TIME_FORMAT.format(date);
+	}
+	
+	/**
+	 * Returns a {@code String} representation of
+	 * the specified duration. The duration is
+	 * expressed in ms whereas the result string
+	 * is expressed in days-hours-minutes-seconds.
+	 * 
+	 * @param duration
+	 * 		The duration to be processed (in ms).
+	 * @return
+	 * 		The corresponding string (in d-h-min-s).
+	 * 
+	 * @author Vincent Labatut
+	 */
+	public static String formatDuration(long duration)
+	{	// processing
+		duration = duration / 1000;
+		long seconds = duration % 60;
+		duration = duration / 60;
+		long minutes = duration % 60;
+		duration = duration / 60;
+		long hours = duration % 24;
+		long days = duration / 24;
 		
+		// generating string
+		String result = days + "d " + hours + "h " + minutes + "min " + seconds + "s";
+		return result;
+	}
+
+	/////////////////////////////////////////////////////////////////
+	// MAIN				/////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////
+	public static void main(String[] args) throws FileNotFoundException
+	{	// load network
+		String networkPath = path + filename;
+		loadPajekNetwork(networkPath);
+		
+		// perform sampling
 //		BFS();
 //		MHRW();
 		AS();
