@@ -16,6 +16,8 @@
 
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -91,8 +94,8 @@ class AlbatrossSampling
 	private static void sampleMetropolisHasting() throws FileNotFoundException
 	{
 		Random ra = new Random();
-		Queue<Integer> sampledNodes = new LinkedList<Integer>();
-		Queue<Integer> queryNodes = new LinkedList<Integer>();
+		Queue<Integer> sampledNodes = new ArrayDeque<Integer>(); // i'd like to use TIntQueue instead, but can't find any implementation in trove
+		Queue<Integer> queryNodes = new ArrayDeque<Integer>();
 		int w = 0;
 		int v = 0;
 		int sampleNodeNumber = sampleSize;
@@ -342,9 +345,9 @@ if(count==0)
 	private static void sampleBreadthFirst() throws FileNotFoundException
 	{
 		Random ra = new Random();
-		Queue<Integer> sampledNodes = new LinkedList<Integer>();
-		Queue<Integer> waitingNodes = new LinkedList<Integer>();
-		Queue<Integer> queryNodes = new LinkedList<Integer>();
+		Queue<Integer> sampledNodes = new ArrayDeque<Integer>();
+		Queue<Integer> waitingNodes = new ArrayDeque<Integer>();
+		Queue<Integer> queryNodes = new ArrayDeque<Integer>();
 		int w = 0;
 		int v = 0;
 		int sample_node_number = sampleSize;
@@ -576,8 +579,8 @@ if(count==0)
 System.out.println("["+formatCurrentTime()+"] Starting sampling");
 long startTime = System.currentTimeMillis();
 		Random ra = new Random();
-		Queue<Integer> sampledNode = new LinkedList<Integer>();
-		Queue<Integer> queryNode = new LinkedList<Integer>();
+		Queue<Integer> sampledNode = new ArrayDeque<Integer>();
+		Queue<Integer> queryNode = new ArrayDeque<Integer>();
 		int w = 0;
 		int v = 0;
 		int sampleNodeNumber = sampleSize;
@@ -903,8 +906,10 @@ if(edgeNumber%100000==0)
 	System.out.println("["+formatCurrentTime()+"] ..edges loaded: "+edgeNumber);
 			str = sr.nextLine();
 			String[] split = str.split(splitFlag);
-			fromNode = Integer.parseInt(split[0]);
-			toNode = Integer.parseInt(split[1]);
+			fromNode = Integer.parseInt(split[0])
+- 1;
+			toNode = Integer.parseInt(split[1])
+- 1;
 			if (fromNode == toNode)
 			{	
 				edgeCount2++;
@@ -1027,10 +1032,10 @@ if(edgeNumber%100000==0)
 		PrintWriter sw = new PrintWriter(writer);
 		
 		// write nodes
-		Map<Integer,Integer> nodeMap;
+		TIntIntMap nodeMap;
 		{	int size = sampledNodes.size();
 			sw.println("*vertices "+size);
-			nodeMap = new HashMap<Integer, Integer>(size);
+			nodeMap = new TIntIntHashMap(size);
 			int nouv = 1;
 			for(Integer old: sampledNodes)
 			{	nodeMap.put(old,nouv);
