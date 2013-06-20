@@ -69,14 +69,23 @@ class AlbatrossSampling
 	static int sampleSize;
 	static double alpha = 0.02;					// Jump Probability in AS
 	static int jumpBudget = 10;					// Set Jump-Cost
-//	static String path = "data/";				// TODO Fill in the file path
+//	static String path = "data/";				// TODO Folder containing the original network, and use to store results
 	static String path = "/home/vlabatut/eclipse/workspaces/Extraction/Database/googleplus/";
-//	static String filename = "kdd03.txt";		// TODO Fill in the file name
+//	static String filename = "kdd03.txt";		// TODO Original network, at the Pajek (.net) format
 	static String filename = "giantcomp.network";
 //	static int sizeFactor = 20;				// TODO size of the original network divided by this value (20 in the original version)
 	static int sizeFactor = 1000;
 
-	private static void MHRW() throws FileNotFoundException
+	/**
+	 * Sample using the Metropolis-Hasting random walk algorithm.
+	 * 
+	 * @throws FileNotFoundException
+	 * 		Problem while recording the sample network.
+	 * 
+	 * @author Long Jin
+	 * @author Vincent Labatut
+	 */
+	private static void sampleMetropolisHasting() throws FileNotFoundException
 	{
 		Random ra = new Random();
 		Queue<Integer> sampledNodes = new LinkedList<Integer>();
@@ -318,7 +327,16 @@ if(count==0)
 		System.out.println("["+formatCurrentTime()+"] MHRW: Average Mixing Time (Out) = " + mix_out / simulation);
 	}
 
-	private static void BFS() throws FileNotFoundException
+	/**
+	 * Sample using the Breadth-First sampling algorithm.
+	 * 
+	 * @throws FileNotFoundException
+	 * 		Problem while recording the sample network.
+	 * 
+	 * @author Long Jin
+	 * @author Vincent Labatut
+	 */
+	private static void sampleBreadthFirst() throws FileNotFoundException
 	{
 		Random ra = new Random();
 		Queue<Integer> sampledNodes = new LinkedList<Integer>();
@@ -541,7 +559,16 @@ if(count==0)
 		System.out.println("["+formatCurrentTime()+"] BFS: Average Mixing Time (Out) = " + mixOut / simulation);
 	}
 
-	private static void AS() throws FileNotFoundException
+	/**
+	 * Sample using the Albatross sampling algorithm.
+	 * 
+	 * @throws FileNotFoundException
+	 * 		Problem while recording the sample network.
+	 * 
+	 * @author Long Jin
+	 * @author Vincent Labatut
+	 */
+	private static void sampleAlbatross() throws FileNotFoundException
 	{
 System.out.println("["+formatCurrentTime()+"] Starting sampling");
 long startTime = System.currentTimeMillis();
@@ -971,7 +998,6 @@ if(edgeNumber%100000==0)
 	}
 
 	/**
-	 * TODO
 	 * Records the sampled network, for further use.
 	 * We use the Pajek {@code .net} format: first
 	 * the list of nodes with their id in the new
@@ -1093,8 +1119,8 @@ if(edgeNumber%100000==0)
 		loadPajekNetwork(networkPath);
 		
 		// perform sampling
-//		BFS();
-//		MHRW();
-		AS();
+//		sampleBreadthFirst();
+//		sampleMetropolisHasting();
+		sampleAlbatross();
 	}
 }
