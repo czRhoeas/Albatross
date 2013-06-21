@@ -39,6 +39,10 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Scanner;
 
+// TODO separate stats processing from actual sampling
+// TODO use a different method for stat processing
+// TODO write a method to produce samples of increasing size
+
 /**
  * Albatross Sampling Algorithm.
  * This is a straight conversion from
