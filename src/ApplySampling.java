@@ -27,12 +27,15 @@ public class ApplySampling
 	/////////////////////////////////////////////////////////////////
 	public static void main(String[] args) throws FileNotFoundException
 	{	// set file names
-		String path = "~/eclipse/workspaces/Networks/Orleans/data/";
+		//String path = "~/eclipse/workspaces/Networks/Orleans/data/";
+		String path = "/home/vlabatut/eclipse/workspaces/Networks/Orleans/data/";
 		String networkFile = "links-anon.txt";
 		String sampleFile = "sample.txt";
+		String nodeSeparator = " ";
 		
 		// read sample
-		List<Long> sample = loadSample(sampleFile);
+		String sFile = path + sampleFile;
+		List<Long> sample = loadSample(sFile);
 		
 		// open input file
 		String inFile = path + networkFile;
@@ -44,16 +47,18 @@ public class ApplySampling
 
 		// date formatting stuff
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Calendar cal = Calendar.getInstance();
 		
 		// process file
 		System.out.println("Extracting sample from network");
 		int count = 0;
 		while(scanner.hasNextLine())
-		{	if(count%100000==0)
-				System.out.println(".. "+dateFormat.format(cal.getTime())+": "+count+" nodes processed");
+		{	if(count%1000000==0)
+			{	Calendar cal = Calendar.getInstance();
+				String date = dateFormat.format(cal.getTime());
+				System.out.println(".. "+date+": "+count+" links processed");
+			}
 			String line = scanner.nextLine();
-			String[] str = line.split("\t");
+			String[] str = line.split(nodeSeparator);
 			long from = Long.parseLong(str[0]);
 			if(sample.contains(from))
 			{	long to = Long.parseLong(str[1]);
@@ -61,6 +66,7 @@ public class ApplySampling
 				{	printWriter.print(line);
 				}
 			}
+			count++;
 		}
 		
 		// close streams
@@ -124,7 +130,7 @@ public class ApplySampling
 	 * 		Problem while accessing the file.
 	 */
 	private static PrintWriter openOutputFile(String file) throws FileNotFoundException
-	{	FileOutputStream fileOut = new FileOutputStream("resources/exemple.dat");
+	{	FileOutputStream fileOut = new FileOutputStream(file);
 		BufferedOutputStream buffOut = new BufferedOutputStream(fileOut);
 		OutputStreamWriter writer = new OutputStreamWriter(buffOut);
 		PrintWriter result = new PrintWriter(writer);
