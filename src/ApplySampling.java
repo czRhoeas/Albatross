@@ -13,7 +13,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Scanner;
 
-
 /**
  * Uniform sampling of a large network.
  * The network takes the form of an
@@ -29,7 +28,7 @@ public class ApplySampling
 	public static void main(String[] args) throws FileNotFoundException
 	{	// set file names
 		String path = "~/eclipse/workspaces/Networks/Orleans/data/";
-		String networkFile = "xxxxx.edgelist";
+		String networkFile = "links-anon.txt";
 		String sampleFile = "sample.txt";
 		
 		// read sample
