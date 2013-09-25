@@ -1,5 +1,4 @@
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -8,9 +7,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Scanner;
 import java.util.TreeSet;
 
@@ -135,8 +132,7 @@ public class ApplySampling
 	 */
 	private static PrintWriter openOutputFile(String file) throws FileNotFoundException
 	{	FileOutputStream fileOut = new FileOutputStream(file);
-		BufferedOutputStream buffOut = new BufferedOutputStream(fileOut);
-		OutputStreamWriter writer = new OutputStreamWriter(buffOut);
+		OutputStreamWriter writer = new OutputStreamWriter(fileOut);
 		PrintWriter result = new PrintWriter(writer);
 		return result;
 	}
