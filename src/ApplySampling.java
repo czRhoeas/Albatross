@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Scanner;
+import java.util.TreeSet;
 
 /**
  * Uniform sampling of a large network.
@@ -35,7 +36,7 @@ public class ApplySampling
 		
 		// read sample
 		String sFile = path + sampleFile;
-		List<Long> sample = loadSample(sFile);
+		TreeSet<Long> sample = loadSample(sFile);
 		
 		// open input file
 		String inFile = path + networkFile;
@@ -51,6 +52,7 @@ public class ApplySampling
 		// process file
 		System.out.println("Extracting sample from network");
 		int count = 0;
+		long min = Long.MAX_VALUE;
 		while(scanner.hasNextLine())
 		{	if(count%1000000==0)
 			{	Calendar cal = Calendar.getInstance();
@@ -60,18 +62,20 @@ public class ApplySampling
 			String line = scanner.nextLine();
 			String[] str = line.split(nodeSeparator);
 			long from = Long.parseLong(str[0]);
-			if(sample.contains(from))
-			{	long to = Long.parseLong(str[1]);
-				if(sample.contains(to))
-				{	printWriter.print(line);
-				}
-			}
+			long to = Long.parseLong(str[1]);
+			if(sample.contains(from)  && sample.contains(to))
+				printWriter.println(line);
+			if(from<min)
+				min = from;
+			if(to<min)
+				min = to;
 			count++;
 		}
 		
 		// close streams
 		scanner.close();
 		printWriter.close();
+		System.out.println("Smaller index found: "+min);
 	}
 
 	/**
@@ -86,10 +90,10 @@ public class ApplySampling
 	 * @throws FileNotFoundException
 	 * 		Problem while accessing the file.
 	 */
-	private static List<Long> loadSample(String file) throws FileNotFoundException
+	private static TreeSet<Long> loadSample(String file) throws FileNotFoundException
 	{	System.out.println("Reading sample");
 		Scanner scanner = openInputFile(file);
-		List<Long> result = new ArrayList<Long>();
+		TreeSet<Long> result = new TreeSet<Long>();
 		while(scanner.hasNextLong())
 		{	long value = scanner.nextLong();
 			result.add(value);
